@@ -19,20 +19,20 @@ In cmake-gui, you'll have to set these CMake variables :
 - **LIBOBS_INCLUDE_DIR** (path) : location of the libobs subfolder in the source
 code of OBS Studio, located at [source_directory]/libobs/.
 - **LIBOBS_LIB** (filepath) : location of the obs.dll file (usually set to
-C:\Program Files\obs-studio\bin\64bit\obs.dll)
-
-Assuming that you installed Qt via the regular Qt App way:
-- **Qt5Core_DIR** (path) : C:/Qt/5.10.1/msvc2017_64/lib/cmake/Qt5Core
-- **Qt5Gui_DIR** (path): C:/Qt/5.10.1/msvc2017_64/lib/cmake/Qt5Gui
-- **Qt5Widgets_DIR** (path) : C:/Qt/5.10.1/msvc2017_64/lib/cmake/Qt5Widgets
+[source_directory]/build/libobs/Debug/obs.lib)
 
 - **LIBOBS_FRONTEND_API_LIB** (filepath) : location of the libobs-frontend-api.dll
-file, usually C:/Program Files/obs-studio/bin/64bit/obs-frontend-api.dll
+file, usually [source_directory]/build/UI/obs-frontend-api/Debug/obs-frontend-api.lib
 (usually in the same place as LIBOBS_LIB)
 - **LIBOBS_FRONTEND_INCLUDE_DIR** (path) : location of the obs-frontend-api
 subfolder in the source code of OBS Studio, located at [source_directory]/UI/obs-frontend-api.
 
-Just keep hitting configure until all the vars are filled out. Then hit generate.
+Assuming that you installed Qt via the regular Qt App way:
+- **Qt5Core_DIR** (path) : C:/Qt/5.13.0/msvc2017_64/lib/cmake/Qt5Core
+- **Qt5Gui_DIR** (path): C:/Qt/5.13.0/msvc2017_64/lib/cmake/Qt5Gui
+- **Qt5Widgets_DIR** (path) : C:/Qt/5.13.0/msvc2017_64/lib/cmake/Qt5Widgets
+
+~~Just keep hitting configure until all the vars are filled out. Then hit generate.~~
 
 ### Linux
 Most versions of Linux you can use cmake-gui or the command line.
