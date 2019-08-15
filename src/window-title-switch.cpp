@@ -1,12 +1,14 @@
 #include <obs-module.h>
 #include "headers/advanced-scene-switcher.hpp"
 
+// add window title switch rule
 void SceneSwitcher::on_add_clicked()
 {
 	QString sceneName = ui->scenes->currentText();
 	QString windowName = ui->windows->currentText();
 	QString transitionName = ui->transitions->currentText();
 	bool fullscreen = ui->fullscreenCheckBox->isChecked();
+	bool checkBackground = ui->checkBackgroundCheckBox->isChecked();
 
 	if (windowName.isEmpty() || sceneName.isEmpty())
 		return;
@@ -15,7 +17,7 @@ void SceneSwitcher::on_add_clicked()
 	OBSWeakSource transition = GetWeakTransitionByQString(transitionName);
 	QVariant v = QVariant::fromValue(windowName);
 
-	QString text = MakeSwitchName(sceneName, windowName, transitionName, fullscreen);
+	QString text = MakeSwitchName(sceneName, windowName, transitionName, fullscreen, checkBackground);
 
 	int idx = FindByData(windowName);
 
@@ -23,7 +25,7 @@ void SceneSwitcher::on_add_clicked()
 	{
 		lock_guard<mutex> lock(switcher->m);
 		switcher->windowSwitches.emplace_back(
-			source, windowName.toUtf8().constData(), transition, fullscreen);
+			source, windowName.toUtf8().constData(), transition, fullscreen, checkBackground);
 
 		QListWidgetItem* item = new QListWidgetItem(text, ui->switches);
 		item->setData(Qt::UserRole, v);
@@ -53,6 +55,7 @@ void SceneSwitcher::on_add_clicked()
 	}
 }
 
+// remove window title switch rule
 void SceneSwitcher::on_remove_clicked()
 {
 	QListWidgetItem* item = ui->switches->currentItem();
@@ -82,7 +85,7 @@ void SceneSwitcher::on_remove_clicked()
 
 
 
-
+// add window title stay rule
 void SceneSwitcher::on_ignoreWindowsAdd_clicked()
 {
 	QString windowName = ui->ignoreWindowsWindows->currentText();
@@ -105,6 +108,7 @@ void SceneSwitcher::on_ignoreWindowsAdd_clicked()
 	}
 }
 
+// remove window title stay rule
 void SceneSwitcher::on_ignoreWindowsRemove_clicked()
 {
 	QListWidgetItem* item = ui->ignoreWindows->currentItem();
@@ -131,6 +135,8 @@ void SceneSwitcher::on_ignoreWindowsRemove_clicked()
 
 	delete item;
 }
+
+
 
 int SceneSwitcher::FindByData(const QString& window)
 {
@@ -198,6 +204,8 @@ void SceneSwitcher::on_switches_currentRowChanged(int idx)
 			ui->windows->setCurrentText(window);
 			ui->transitions->setCurrentText(transitionName.c_str());
 			ui->fullscreenCheckBox->setChecked(s.fullscreen);
+			ui->checkBackgroundCheckBox->setChecked(s.checkBackground);
+
 			break;
 		}
 	}
@@ -230,6 +238,7 @@ void SwitcherData::checkWindowTitleSwitch(bool& match, OBSWeakSource& scene, OBS
 {
 	//check if title should be ignored
 	string title;
+	
 	GetCurrentWindowTitle(title);
 	for (auto& window : ignoreWindowsSwitches)
 	{
@@ -253,6 +262,12 @@ void SwitcherData::checkWindowTitleSwitch(bool& match, OBSWeakSource& scene, OBS
 	{
 		if (s.window == title)
 		{
+			match = !s.fullscreen || (s.fullscreen && isFullscreen());
+			scene = s.scene;
+			transition = s.transition;
+			return;
+		}
+		if (s.checkBackground && existsInWindowList(s.window)) {
 			match = !s.fullscreen || (s.fullscreen && isFullscreen());
 			scene = s.scene;
 			transition = s.transition;
