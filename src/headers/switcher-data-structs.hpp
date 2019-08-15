@@ -22,6 +22,7 @@
 #define EXE_FUNC 3
 #define SCREEN_REGION_FUNC 4
 #define WINDOW_TITLE_FUNC 5
+#define PIXEL_COLOR_FUNC 6
 
 #define DEFAULT_PRIORITY_0 READ_FILE_FUNC
 #define DEFAULT_PRIORITY_1 ROUND_TRIP_FUNC
@@ -29,6 +30,7 @@
 #define DEFAULT_PRIORITY_3 EXE_FUNC
 #define DEFAULT_PRIORITY_4 SCREEN_REGION_FUNC
 #define DEFAULT_PRIORITY_5 WINDOW_TITLE_FUNC
+#define DEFAULT_PRIORITY_6 PIXEL_COLOR_FUNC
 
 using namespace std;
 
@@ -42,13 +44,15 @@ struct WindowSceneSwitch
 	string window;
 	OBSWeakSource transition;
 	bool fullscreen;
+	bool checkBackground;
 
 	inline WindowSceneSwitch(
-		OBSWeakSource scene_, const char* window_, OBSWeakSource transition_, bool fullscreen_)
+		OBSWeakSource scene_, const char* window_, OBSWeakSource transition_, bool fullscreen_, bool checkBackground_)
 		: scene(scene_)
 		, window(window_)
 		, transition(transition_)
 		, fullscreen(fullscreen_)
+		, checkBackground(checkBackground_)
 	{
 	}
 };
@@ -86,6 +90,26 @@ struct ScreenRegionSwitch
 		, maxX(maxX_)
 		, maxY(maxY_)
 		, regionStr(regionStr_)
+	{
+	}
+};
+
+struct PixelSwitch
+{
+	OBSWeakSource scene;
+	OBSWeakSource transition;
+	int pxX, pxY;
+	string colorsStr;
+	string pixelStr;
+
+	inline PixelSwitch(OBSWeakSource scene_, OBSWeakSource transition_, int pxX_, int pxY_,
+		string colorsStr_, string pixelStr_)
+		: scene(scene_)
+		, transition(transition_)
+		, pxX(pxX_)
+		, pxY(pxY_)
+		, colorsStr(colorsStr_)
+		, pixelStr(pixelStr_)
 	{
 	}
 };
@@ -237,6 +261,8 @@ struct SwitcherData
 
 	vector<ScreenRegionSwitch> screenRegionSwitches;
 
+	vector<PixelSwitch> pixels;
+
 	vector<OBSWeakSource> pauseScenesSwitches;
 
 	vector<string> pauseWindowsSwitches;
@@ -266,6 +292,7 @@ struct SwitcherData
 		DEFAULT_PRIORITY_3,
 		DEFAULT_PRIORITY_4,
 		DEFAULT_PRIORITY_5,
+		DEFAULT_PRIORITY_6,
 	};
 
 	void Thread();
@@ -283,6 +310,7 @@ struct SwitcherData
 	void checkWindowTitleSwitch(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
 	void checkExeSwitch(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
 	void checkScreenRegionSwitch(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
+	void checkPixelSwitch(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
 	void checkSwitchInfoFromFile(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
 	void checkFileContent(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
 	void checkRandom(bool& match, OBSWeakSource& scene, OBSWeakSource& transition, int& delay);
@@ -314,6 +342,13 @@ struct SwitcherData
 			ScreenRegionSwitch& s = screenRegionSwitches[i];
 			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
 				screenRegionSwitches.erase(screenRegionSwitches.begin() + i--);
+		}
+
+		for (size_t i = 0; i < pixels.size(); i++)
+		{
+			PixelSwitch& s = pixels[i];
+			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+				pixels.erase(pixels.begin() + i--);
 		}
 
 		for (size_t i = 0; i < pauseScenesSwitches.size(); i++)

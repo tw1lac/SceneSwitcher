@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QTimer>
+#include <QRegularExpression>
 
 #include <condition_variable>
 #include <chrono>
@@ -41,14 +42,19 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 
 	switcher->Prune();
 
+	const QRegularExpression scenesRegex(".*cenes\\d?");
+	QList<QComboBox*> sceneBoxes = ui->tabWidget->findChildren<QComboBox*>(scenesRegex);
+
+	//Adds all scenes to the scene-list
 	BPtr<char*> scenes = obs_frontend_get_scene_names();
 	char** temp = scenes;
 	while (*temp)
 	{
 		const char* name = *temp;
-		ui->scenes->addItem(name);
+		/*ui->scenes->addItem(name);
 		ui->noMatchSwitchScene->addItem(name);
 		ui->screenRegionScenes->addItem(name);
+		ui->pixelScenes->addItem(name);
 		ui->pauseScenesScenes->addItem(name);
 		ui->sceneRoundTripScenes1->addItem(name);
 		ui->sceneRoundTripScenes2->addItem(name);
@@ -59,28 +65,44 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		ui->executableScenes->addItem(name);
 		ui->idleScenes->addItem(name);
 		ui->randomScenes->addItem(name);
-		ui->fileScenes->addItem(name);
+		ui->fileScenes->addItem(name);*/
+		for (auto& s : sceneBoxes) {
+			s->addItem(name);
+		}
 		temp++;
 	}
 
 	ui->sceneRoundTripScenes2->addItem(PREVIOUS_SCENE_NAME);
 	ui->idleScenes->addItem(PREVIOUS_SCENE_NAME);
 
+
+	//adds all transitions to the transition-lists
 	obs_frontend_source_list* transitions = new obs_frontend_source_list();
 	obs_frontend_get_transitions(transitions);
+
+	const QRegularExpression transitionRegex(".*ransitions");
+	QList<QComboBox*> transitionBoxes = ui->tabWidget->findChildren<QComboBox*>(transitionRegex);
+	//ui->debugTextTwilac->setText(to_string(transitionBoxes.length()).c_str());
 
 	for (size_t i = 0; i < transitions->sources.num; i++)
 	{
 		const char* name = obs_source_get_name(transitions->sources.array[i]);
-		ui->transitions->addItem(name);
+		/*ui->transitions->addItem(name);
 		ui->screenRegionsTransitions->addItem(name);
+		ui->pixelTransitions->addItem(name);
 		ui->sceneRoundTripTransitions->addItem(name);
 		ui->transitionsTransitions->addItem(name);
 		ui->defaultTransitionsTransitions->addItem(name);
 		ui->executableTransitions->addItem(name);
 		ui->idleTransitions->addItem(name);
 		ui->randomTransitions->addItem(name);
-		ui->fileTransitions->addItem(name);
+		ui->fileTransitions->addItem(name);*/
+
+		
+		//for (int i = 0; i <transitionBoxes.length(); i++) {
+		for (auto& s : transitionBoxes){
+			s->addItem(name);
+		}
 	}
 
 	obs_frontend_source_list_free(transitions);
@@ -103,6 +125,8 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 	ui->noMatchSwitchScene->setCurrentText(GetWeakSourceName(switcher->nonMatchingScene).c_str());
 	ui->checkInterval->setValue(switcher->interval);
 
+
+	//adds current opened windows to the windows-lists
 	vector<string> windows;
 	GetWindowList(windows);
 
@@ -114,10 +138,15 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		ui->ignoreIdleWindowsWindows->addItem(window.c_str());
 	}
 
+
+	//adds current running processes to the processes-lists
 	QStringList processes;
 	GetProcessList(processes);
 	for (QString& process : processes)
+	{
 		ui->executable->addItem(process);
+	}
+		
 
 	for (auto& s : switcher->executableSwitches)
 	{
@@ -135,7 +164,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		string sceneName = GetWeakSourceName(s.scene);
 		string transitionName = GetWeakSourceName(s.transition);
 		QString text = MakeSwitchName(
-			sceneName.c_str(), s.window.c_str(), transitionName.c_str(), s.fullscreen);
+			sceneName.c_str(), s.window.c_str(), transitionName.c_str(), s.fullscreen, s.checkBackground);
 
 		QListWidgetItem* item = new QListWidgetItem(text, ui->switches);
 		item->setData(Qt::UserRole, s.window.c_str());
@@ -150,6 +179,17 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 
 		QListWidgetItem* item = new QListWidgetItem(text, ui->screenRegions);
 		item->setData(Qt::UserRole, s.regionStr.c_str());
+	}
+
+	for (auto& s : switcher->pixels)
+	{
+		string sceneName = GetWeakSourceName(s.scene);
+		string transitionName = GetWeakSourceName(s.transition);
+		QString text = MakePixelSwitchName(
+			sceneName.c_str(), transitionName.c_str(), s.pxX, s.pxY, s.colorsStr.c_str());
+
+		QListWidgetItem* item = new QListWidgetItem(text, ui->pixelSwitches);
+		item->setData(Qt::UserRole, s.pixelStr.c_str());
 	}
 
 	ui->autoStopSceneCheckBox->setChecked(switcher->autoStopEnable);
@@ -327,6 +367,9 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 			break;
 		case WINDOW_TITLE_FUNC:
 			s = "Window Title";
+			break;
+		case PIXEL_COLOR_FUNC:
+			s = "Pixel Color";
 		}
 		QString text(s.c_str());
 		QListWidgetItem* item = new QListWidgetItem(text, ui->priorityList);
@@ -347,6 +390,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		obs_data_t* obj = obs_data_create();
 		obs_data_array_t* array = obs_data_array_create();
 		obs_data_array_t* screenRegionArray = obs_data_array_create();
+		obs_data_array_t* pixelColorArray = obs_data_array_create();
 		obs_data_array_t* pauseScenesArray = obs_data_array_create();
 		obs_data_array_t* pauseWindowsArray = obs_data_array_create();
 		obs_data_array_t* ignoreWindowsArray = obs_data_array_create();
@@ -374,6 +418,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 				obs_data_set_string(array_obj, "transition", transitionName);
 				obs_data_set_string(array_obj, "window_title", s.window.c_str());
 				obs_data_set_bool(array_obj, "fullscreen", s.fullscreen);
+				obs_data_set_bool(array_obj, "checkBackground", s.checkBackground);
 				obs_data_array_push_back(array, array_obj);
 				obs_source_release(source);
 				obs_source_release(transition);
@@ -400,6 +445,30 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 				obs_data_set_int(array_obj, "maxY", s.maxY);
 				obs_data_set_string(array_obj, "screenRegionStr", s.regionStr.c_str());
 				obs_data_array_push_back(screenRegionArray, array_obj);
+				obs_source_release(source);
+				obs_source_release(transition);
+			}
+
+			obs_data_release(array_obj);
+		}
+
+		for (PixelSwitch& s : switcher->pixels)
+		{
+			obs_data_t* array_obj = obs_data_create();
+
+			obs_source_t* source = obs_weak_source_get_source(s.scene);
+			obs_source_t* transition = obs_weak_source_get_source(s.transition);
+			if (source && transition)
+			{
+				const char* sceneName = obs_source_get_name(source);
+				const char* transitionName = obs_source_get_name(transition);
+				obs_data_set_string(array_obj, "pixelColorScene", sceneName);
+				obs_data_set_string(array_obj, "transition", transitionName);
+				obs_data_set_int(array_obj, "pxX", s.pxX);
+				obs_data_set_int(array_obj, "pxY", s.pxY);
+				obs_data_set_string(array_obj, "colorsStr", s.colorsStr.c_str());
+				obs_data_set_string(array_obj, "pixelStr", s.pixelStr.c_str());
+				obs_data_array_push_back(pixelColorArray, array_obj);
 				obs_source_release(source);
 				obs_source_release(transition);
 			}
@@ -601,6 +670,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 
 		obs_data_set_array(obj, "switches", array);
 		obs_data_set_array(obj, "screenRegion", screenRegionArray);
+		obs_data_set_array(obj, "pixelColor", pixelColorArray);
 		obs_data_set_array(obj, "pauseScenes", pauseScenesArray);
 		obs_data_set_array(obj, "pauseWindows", pauseWindowsArray);
 		obs_data_set_array(obj, "ignoreWindows", ignoreWindowsArray);
@@ -636,11 +706,13 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		obs_data_set_int(obj, "priority3", switcher->functionNamesByPriority[3]);
 		obs_data_set_int(obj, "priority4", switcher->functionNamesByPriority[4]);
 		obs_data_set_int(obj, "priority5", switcher->functionNamesByPriority[5]);
+		obs_data_set_int(obj, "priority6", switcher->functionNamesByPriority[6]);
 
 		obs_data_set_obj(save_data, "advanced-scene-switcher", obj);
 
 		obs_data_array_release(array);
 		obs_data_array_release(screenRegionArray);
+		obs_data_array_release(pixelColorArray);
 		obs_data_array_release(pauseScenesArray);
 		obs_data_array_release(pauseWindowsArray);
 		obs_data_array_release(ignoreWindowsArray);
@@ -661,6 +733,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		obs_data_t* obj = obs_data_get_obj(save_data, "advanced-scene-switcher");
 		obs_data_array_t* array = obs_data_get_array(obj, "switches");
 		obs_data_array_t* screenRegionArray = obs_data_get_array(obj, "screenRegion");
+		obs_data_array_t* pixelColorArray = obs_data_get_array(obj, "pixelColor");
 		obs_data_array_t* pauseScenesArray = obs_data_get_array(obj, "pauseScenes");
 		obs_data_array_t* pauseWindowsArray = obs_data_get_array(obj, "pauseWindows");
 		obs_data_array_t* ignoreWindowsArray = obs_data_get_array(obj, "ignoreWindows");
@@ -696,9 +769,10 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 			const char* transition = obs_data_get_string(array_obj, "transition");
 			const char* window = obs_data_get_string(array_obj, "window_title");
 			bool fullscreen = obs_data_get_bool(array_obj, "fullscreen");
+			bool checkBackground = obs_data_get_bool(array_obj, "checkBackground");
 
 			switcher->windowSwitches.emplace_back(GetWeakSourceByName(scene), window,
-				GetWeakTransitionByName(transition), fullscreen);
+				GetWeakTransitionByName(transition), fullscreen, checkBackground);
 
 			obs_data_release(array_obj);
 		}
@@ -720,6 +794,26 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 
 			switcher->screenRegionSwitches.emplace_back(GetWeakSourceByName(scene),
 				GetWeakTransitionByName(transition), minX, minY, maxX, maxY, regionStr);
+
+			obs_data_release(array_obj);
+		}
+
+		switcher->pixels.clear();
+		count = obs_data_array_count(pixelColorArray);
+
+		for (size_t i = 0; i < count; i++)
+		{
+			obs_data_t* array_obj = obs_data_array_item(pixelColorArray, i);
+
+			const char* scene = obs_data_get_string(array_obj, "pixelScene");
+			const char* transition = obs_data_get_string(array_obj, "transition");
+			int pxX = obs_data_get_int(array_obj, "pxX");
+			int pxY = obs_data_get_int(array_obj, "pxY");
+			string colorsStr = obs_data_get_string(array_obj, "colorsStr");
+			string pixelStr = obs_data_get_string(array_obj, "pixelStr");
+
+			switcher->pixels.emplace_back(GetWeakSourceByName(scene),
+				GetWeakTransitionByName(transition), pxX, pxY, colorsStr, pixelStr);
 
 			obs_data_release(array_obj);
 		}
@@ -943,6 +1037,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 
 		obs_data_array_release(array);
 		obs_data_array_release(screenRegionArray);
+		obs_data_array_release(pixelColorArray);
 		obs_data_array_release(pauseScenesArray);
 		obs_data_array_release(ignoreWindowsArray);
 		obs_data_array_release(sceneRoundTripArray);
@@ -1020,7 +1115,9 @@ void SwitcherData::Thread()
 			case EXE_FUNC:
 				checkExeSwitch(match, scene, transition);
 				break;
-
+			case PIXEL_COLOR_FUNC:
+				checkPixelSwitch(match, scene, transition);
+				break;
 			case SCREEN_REGION_FUNC:
 				checkScreenRegionSwitch(match, scene, transition);
 				break;

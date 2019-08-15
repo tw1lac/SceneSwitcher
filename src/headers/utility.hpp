@@ -14,7 +14,7 @@ static inline bool WeakSourceValid(obs_weak_source_t* ws)
 }
 
 static inline QString MakeSwitchName(
-	const QString& scene, const QString& value, const QString& transition, bool fullscreen)
+	const QString& scene, const QString& value, const QString& transition, bool fullscreen, bool checkBackground)
 {
 	if (!fullscreen)
 		return QStringLiteral("[") + scene + QStringLiteral(", ") + transition
@@ -38,8 +38,16 @@ static inline QString MakeScreenRegionSwitchName(
 {
 	return QStringLiteral("[") + scene + QStringLiteral(", ") + transition + QStringLiteral("]: ")
 		+ QString::number(minX) + QStringLiteral(", ") + QString::number(minY)
-		+ QStringLiteral(" x ") + QString::number(maxX) + QStringLiteral(", ")
+		+ QStringLiteral("   x   ") + QString::number(maxX) + QStringLiteral(", ")
 		+ QString::number(maxY);
+}
+
+static inline QString MakePixelSwitchName(
+	const QString& scene, const QString& transition, int pxX, int pxY, const QString& colorStr)
+{
+	return QStringLiteral("[") + scene + QStringLiteral(", ") + transition + QStringLiteral("]: ")
+		+ QStringLiteral("") + QString::number(pxX) + QStringLiteral(", ") + QString::number(pxY) 
+		+ QStringLiteral("") + colorStr;
 }
 
 static inline QString MakeSceneRoundTripSwitchName(

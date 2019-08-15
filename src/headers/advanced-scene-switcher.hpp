@@ -28,7 +28,8 @@ public:
 	void SetStopped();
 
 	int FindByData(const QString &window);
-	int ScreenRegionFindByData(const QString &region);
+	int ScreenRegionFindByData(const QString& region);
+	int PixelFindByData(const QString& pixel);
 	int PauseScenesFindByData(const QString &scene);
 	int PauseWindowsFindByData(const QString &window);
 	int IgnoreWindowsFindByData(const QString &window);
@@ -55,6 +56,10 @@ public slots:
 	void on_noMatchSwitchScene_currentTextChanged(const QString &text);
 	void on_checkInterval_valueChanged(int value);
 	void on_toggleStartButton_clicked();
+
+	void on_pixelSwitches_currentRowChanged(int idx);
+	void on_pixelSwitchesAdd_clicked();
+	void on_pixelSwitchesRemove_clicked();
 
 	void on_screenRegions_currentRowChanged(int idx);
 	void on_screenRegionAdd_clicked();
@@ -125,21 +130,28 @@ public slots:
 
 
 /********************************************************************************
- * Windowtitle helper
+ * Window Title helper
  ********************************************************************************/
 void GetWindowList(std::vector<std::string> &windows);
 void GetCurrentWindowTitle(std::string &title);
 bool isFullscreen();
+bool existsInWindowList(const std::string& title);
 
 
 /********************************************************************************
- * Screenregion helper
+ * Pixel Color helper
+ ********************************************************************************/
+void getPixelColor(HWND window, int pxX, int pxY, string& currPixelColor);
+
+
+/********************************************************************************
+ * Screen Region helper
  ********************************************************************************/
 pair<int, int> getCursorPos();
 
 
 /********************************************************************************
- * Idle detection helper
+ * Idle Detection helper
  ********************************************************************************/
 int secondsSinceLastInput();
 
