@@ -42,6 +42,7 @@ set(advanced-scene-switcher_SOURCES
 	src/advanced-scene-switcher-module.c
 	src/scene-transitions.cpp
 	src/screen-region-switch.cpp
+	src/pixel-switch.cpp
 	src/priority.cpp
 	src/executable-switch.cpp
 	src/idle-switch.cpp
