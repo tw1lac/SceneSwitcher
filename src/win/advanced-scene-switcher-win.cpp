@@ -6,6 +6,26 @@
 
 using namespace std;
 
+// sets currPixelColor to the RGB value of the choosen pixel
+void getPixelColor(HWND window, int pxX, int pxY, string& currPixelColor)
+{
+	int r;
+	int g;
+	int b;
+	HDC screenRef;
+	COLORREF pxRef;
+	LPCSTR sw;
+
+	screenRef = GetDC(window);
+	pxRef = GetPixel(screenRef, pxX, pxY);
+	r = GetRValue(pxRef);
+	g = GetGValue(pxRef);
+	b = GetRValue(pxRef);
+
+	currPixelColor = (to_string(r * 0.001)).substr(2, 3) + (to_string(g * 0.001)).substr(2, 3) + (to_string(b * 0.001)).substr(2, 3);
+	ReleaseDC(NULL, screenRef);
+}
+
 static bool GetWindowTitle(HWND window, string& title)
 {
 	size_t len = (size_t)GetWindowTextLengthW(window);
@@ -105,6 +125,19 @@ bool isFullscreen()
 	return false;
 }
 
+
+// returns true if a window with the title exists (even if in background)
+bool existsInWindowList(const string& title){
+	vector<string> windows;
+	GetWindowList(windows);
+	for (size_t i = 0; i < windows.size(); i++) {
+		if (windows[i]==title) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void GetProcessList(QStringList &processes) {
 
 	HANDLE procSnapshot;
@@ -121,7 +154,7 @@ void GetProcessList(QStringList &processes) {
 	}
 
 	do {
-		QString tempexe = QString::fromWCharArray(procEntry.szExeFile);
+		QString tempexe = QString::fromUtf8(procEntry.szExeFile);
 		if (tempexe == "System") continue;
 		if (tempexe == "[System Process]") continue;
 		if (processes.contains(tempexe)) continue;
@@ -141,11 +174,11 @@ bool isInFocus(const QString &exeToCheck) {
 	HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
 	if (process == NULL) return false;
 
-	WCHAR executablePath[600];
+	CHAR executablePath[600];
 	GetModuleFileNameEx(process, 0, executablePath, 600);
 	CloseHandle(process);
 
-	return exeToCheck == QString::fromWCharArray(executablePath).split(QRegExp("(/|\\\\)")).back();
+	return exeToCheck == QString::fromUtf8(executablePath).split(QRegExp("(/|\\\\)")).back();
 }
 
 int getLastInputTime()
