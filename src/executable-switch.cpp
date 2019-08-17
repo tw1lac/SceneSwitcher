@@ -2,11 +2,11 @@
 
 int SceneSwitcher::executableFindByData(const QString& exe)
 {
-	int count = ui->executables->count();
-
+	int count = ui->executableSwitchesList->count();
+	
 	for (int i = 0; i < count; i++)
 	{
-		QListWidgetItem* item = ui->executables->item(i);
+		QListWidgetItem* item = ui->executableSwitchesList->item(i);
 		QString itemExe = item->data(Qt::UserRole).toString();
 
 		if (itemExe == exe)
@@ -16,7 +16,6 @@ int SceneSwitcher::executableFindByData(const QString& exe)
 	return -1;
 }
 
-
 void SceneSwitcher::on_executables_currentRowChanged(int idx)
 {
 	if (loading)
@@ -24,7 +23,7 @@ void SceneSwitcher::on_executables_currentRowChanged(int idx)
 	if (idx == -1)
 		return;
 
-	QListWidgetItem* item = ui->executables->item(idx);
+	QListWidgetItem* item = ui->executableSwitchesList->item(idx);
 
 	QString exec = item->data(Qt::UserRole).toString();
 
@@ -43,7 +42,6 @@ void SceneSwitcher::on_executables_currentRowChanged(int idx)
 		}
 	}
 }
-
 
 void SceneSwitcher::on_executableAdd_clicked()
 {
@@ -69,12 +67,12 @@ void SceneSwitcher::on_executableAdd_clicked()
 		switcher->executableSwitches.emplace_back(
 			source, transition, exeName.toUtf8().constData(), inFocus);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->executables);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->executableSwitchesList);
 		item->setData(Qt::UserRole, v);
 	}
 	else
 	{
-		QListWidgetItem* item = ui->executables->item(idx);
+		QListWidgetItem* item = ui->executableSwitchesList->item(idx);
 		item->setText(text);
 
 		{
@@ -91,14 +89,13 @@ void SceneSwitcher::on_executableAdd_clicked()
 			}
 		}
 
-		ui->executables->sortItems();
+		ui->executableSwitchesList->sortItems();
 	}
 }
 
-
 void SceneSwitcher::on_executableRemove_clicked()
 {
-	QListWidgetItem* item = ui->executables->currentItem();
+	QListWidgetItem* item = ui->executableSwitchesList->currentItem();
 	if (!item)
 		return;
 
@@ -136,5 +133,50 @@ void SwitcherData::checkExeSwitch(bool& match, OBSWeakSource& scene, OBSWeakSour
 			match = !s.mInFocus || (s.mInFocus && isInFocus(s.mExe));
 			break;
 		}
+	}
+}
+
+void SaveExecutableSwitcher(obs_data_array_t*& array) {
+	for (ExecutableSceneSwitch& s : switcher->executableSwitches)
+	{
+		obs_data_t* array_obj = obs_data_create();
+
+		obs_source_t* source = obs_weak_source_get_source(s.mScene);
+		obs_source_t* transition = obs_weak_source_get_source(s.mTransition);
+
+		if (source && transition)
+		{
+			const char* sceneName = obs_source_get_name(source);
+			const char* transitionName = obs_source_get_name(transition);
+			obs_data_set_string(array_obj, "scene", sceneName);
+			obs_data_set_string(array_obj, "transition", transitionName);
+			obs_data_set_string(array_obj, "exefile", s.mExe.toUtf8());
+			obs_data_set_bool(array_obj, "infocus", s.mInFocus);
+			obs_data_array_push_back(array, array_obj);
+			obs_source_release(source);
+			obs_source_release(transition);
+		}
+
+		obs_data_release(array_obj);
+	}
+}
+
+void LoadExecutableSwitcher(obs_data_array_t*& array) {
+	switcher->executableSwitches.clear();
+	size_t count = obs_data_array_count(array);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		obs_data_t* array_obj = obs_data_array_item(array, i);
+
+		const char* scene = obs_data_get_string(array_obj, "scene");
+		const char* transition = obs_data_get_string(array_obj, "transition");
+		const char* exe = obs_data_get_string(array_obj, "exefile");
+		bool infocus = obs_data_get_bool(array_obj, "infocus");
+
+		switcher->executableSwitches.emplace_back(
+			GetWeakSourceByName(scene), GetWeakTransitionByName(transition), exe, infocus);
+
+		obs_data_release(array_obj);
 	}
 }

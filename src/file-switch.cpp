@@ -201,7 +201,7 @@ void SceneSwitcher::on_fileAdd_clicked()
 	QVariant v = QVariant::fromValue(switchText);
 
 
-	QListWidgetItem* item = new QListWidgetItem(switchText, ui->fileScenesList);
+	QListWidgetItem* item = new QListWidgetItem(switchText, ui->fileSwitchesList);
 	item->setData(Qt::UserRole, v);
 
 	lock_guard<mutex> lock(switcher->m);
@@ -212,11 +212,11 @@ void SceneSwitcher::on_fileAdd_clicked()
 
 void SceneSwitcher::on_fileRemove_clicked()
 {
-	QListWidgetItem* item = ui->fileScenesList->currentItem();
+	QListWidgetItem* item = ui->fileSwitchesList->currentItem();
 	if (!item)
 		return;
 
-	int idx = ui->fileScenesList->currentRow();
+	int idx = ui->fileSwitchesList->currentRow();
 	if (idx == -1)
 		return;
 
@@ -226,7 +226,7 @@ void SceneSwitcher::on_fileRemove_clicked()
 		auto& switches = switcher->fileSwitches;
 		switches.erase(switches.begin() + idx);
 	}
-	qDeleteAll(ui->fileScenesList->selectedItems());
+	qDeleteAll(ui->fileSwitchesList->selectedItems());
 }
 
 void SceneSwitcher::on_fileScenesList_currentRowChanged(int idx)
@@ -251,4 +251,53 @@ void SceneSwitcher::on_fileScenesList_currentRowChanged(int idx)
 	ui->filePathLineEdit->setText(s.file.c_str());
 	ui->fileContentRegExCheckBox->setChecked(s.useRegex);
 	ui->fileContentTimeCheckBox->setChecked(s.useTime);
+}
+
+void SaveFileSwitcher(obs_data_array_t*& array) {
+	for (FileSwitch& s : switcher->fileSwitches)
+	{
+		obs_data_t* array_obj = obs_data_create();
+
+		obs_source_t* source = obs_weak_source_get_source(s.scene);
+		obs_source_t* transition = obs_weak_source_get_source(s.transition);
+
+		if (source && transition)
+		{
+			const char* sceneName = obs_source_get_name(source);
+			const char* transitionName = obs_source_get_name(transition);
+			obs_data_set_string(array_obj, "scene", sceneName);
+			obs_data_set_string(array_obj, "transition", transitionName);
+			obs_data_set_string(array_obj, "file", s.file.c_str());
+			obs_data_set_string(array_obj, "text", s.text.c_str());
+			obs_data_set_bool(array_obj, "useRegex", s.useRegex);
+			obs_data_set_bool(array_obj, "useTime", s.useTime);
+			obs_data_array_push_back(array, array_obj);
+			obs_source_release(source);
+			obs_source_release(transition);
+		}
+
+		obs_data_release(array_obj);
+	}
+}
+
+void LoadFileSwitcher(obs_data_array_t*& array) {
+	switcher->fileSwitches.clear();
+	size_t count = obs_data_array_count(array);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		obs_data_t* array_obj = obs_data_array_item(array, i);
+
+		const char* scene = obs_data_get_string(array_obj, "scene");
+		const char* transition = obs_data_get_string(array_obj, "transition");
+		const char* file = obs_data_get_string(array_obj, "file");
+		const char* text = obs_data_get_string(array_obj, "text");
+		bool useRegex = obs_data_get_bool(array_obj, "useRegex");
+		bool useTime = obs_data_get_bool(array_obj, "useTime");
+
+		switcher->fileSwitches.emplace_back(
+			GetWeakSourceByName(scene), GetWeakTransitionByName(transition), file, text, useRegex, useTime);
+
+		obs_data_release(array_obj);
+	}
 }

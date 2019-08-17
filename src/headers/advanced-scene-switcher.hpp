@@ -136,18 +136,26 @@ void GetWindowList(std::vector<std::string> &windows);
 void GetCurrentWindowTitle(std::string &title);
 bool isFullscreen();
 bool existsInWindowList(const std::string& title);
+void SaveWindowSwitcher(obs_data_array_t*& array);
+void LoadWindowSwitcher(obs_data_array_t*& array);
+void SaveIgnoreWindowSwitcher(obs_data_array_t*& array);
+void LoadIgnoreWindowSwitcher(obs_data_array_t*& array);
 
 
 /********************************************************************************
  * Pixel Color helper
  ********************************************************************************/
 void getPixelColor(HWND window, int pxX, int pxY, string& currPixelColor);
+void SavePixelSwitcher(obs_data_array_t*& array);
+void LoadPixelSwitcher(obs_data_array_t*& array);
 
 
 /********************************************************************************
  * Screen Region helper
  ********************************************************************************/
 pair<int, int> getCursorPos();
+void SaveScreenRegionSwitcher(obs_data_array_t*& array);
+void LoadScreenRegionSwitcher(obs_data_array_t*& array);
 
 
 /********************************************************************************
@@ -161,7 +169,8 @@ int secondsSinceLastInput();
  ********************************************************************************/
 void GetProcessList(QStringList &processes);
 bool isInFocus(const QString &exeToCheck);
-
+void SaveExecutableSwitcher(obs_data_array_t*& array);
+void LoadExecutableSwitcher(obs_data_array_t*& array);
 
 /********************************************************************************
  * Sceneswitch helper
@@ -185,3 +194,29 @@ void loadKeybinding(obs_hotkey_id hotkeyId);
  ********************************************************************************/
 struct SwitcherData;
 extern SwitcherData* switcher;
+
+//OTHER
+void SavePauseSwitcher(obs_data_array_t*& array);
+void LoadPauseSwitcher(obs_data_array_t*& array);
+void SavePauseWindowSwitcher(obs_data_array_t*& array);
+void LoadPauseWindowSwitcher(obs_data_array_t*& array);
+
+void SaveScreenRoundTripSwitcher(obs_data_array_t*& array);
+void LoadScreenRoundTripSwitcher(obs_data_array_t*& array);
+
+void SaveScreenTransitions(obs_data_array_t*& array);
+void LoadScreenTransitions(obs_data_array_t*& array);
+void SaveDefaultScreenTransitions(obs_data_array_t*& array);
+void LoadDefaultScreenTransitions(obs_data_array_t*& array);
+
+void SaveRandomSwitcher(obs_data_array_t*& array);
+void LoadRandomSwitcher(obs_data_array_t*& array);
+
+void SaveFileSwitcher(obs_data_array_t*& array);
+void LoadFileSwitcher(obs_data_array_t*& array);
+
+void SaveIgnoreIdleWindows(obs_data_array_t*& array);
+void LoadIgnoreIdleWindows(obs_data_array_t*& array);
+
+void SavePriorityOrder(obs_data_t*& obj);
+void LoadPriorityOrder(obs_data_t*& obj);

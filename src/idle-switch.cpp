@@ -79,7 +79,6 @@ void SceneSwitcher::on_idleCheckBox_stateChanged(int state)
 	}
 }
 
-
 void SceneSwitcher::UpdateIdleDataTransition(const QString& name)
 {
 	obs_weak_source_t* transition = GetWeakTransitionByQString(name);
@@ -131,7 +130,7 @@ void SceneSwitcher::on_ignoreIdleWindows_currentRowChanged(int idx)
 	if (idx == -1)
 		return;
 
-	QListWidgetItem* item = ui->ignoreIdleWindows->item(idx);
+	QListWidgetItem* item = ui->ignoreIdleWindowsList->item(idx);
 
 	QString window = item->data(Qt::UserRole).toString();
 
@@ -155,22 +154,22 @@ void SceneSwitcher::on_ignoreIdleAdd_clicked()
 
 	QVariant v = QVariant::fromValue(windowName);
 
-	QList<QListWidgetItem*> items = ui->ignoreIdleWindows->findItems(windowName, Qt::MatchExactly);
+	QList<QListWidgetItem*> items = ui->ignoreIdleWindowsList->findItems(windowName, Qt::MatchExactly);
 
 	if (items.size() == 0)
 	{
-		QListWidgetItem* item = new QListWidgetItem(windowName, ui->ignoreIdleWindows);
+		QListWidgetItem* item = new QListWidgetItem(windowName, ui->ignoreIdleWindowsList);
 		item->setData(Qt::UserRole, v);
 
 		lock_guard<mutex> lock(switcher->m);
 		switcher->ignoreIdleWindows.emplace_back(windowName.toUtf8().constData());
-		ui->ignoreIdleWindows->sortItems();
+		ui->ignoreIdleWindowsList->sortItems();
 	}
 }
 
 void SceneSwitcher::on_ignoreIdleRemove_clicked()
 {
-	QListWidgetItem* item = ui->ignoreIdleWindows->currentItem();
+	QListWidgetItem* item = ui->ignoreIdleWindowsList->currentItem();
 	if (!item)
 		return;
 
@@ -197,12 +196,12 @@ void SceneSwitcher::on_ignoreIdleRemove_clicked()
 
 int SceneSwitcher::IgnoreIdleWindowsFindByData(const QString& window)
 {
-	int count = ui->ignoreIdleWindows->count();
+	int count = ui->ignoreIdleWindowsList->count();
 	int idx = -1;
 
 	for (int i = 0; i < count; i++)
 	{
-		QListWidgetItem* item = ui->ignoreIdleWindows->item(i);
+		QListWidgetItem* item = ui->ignoreIdleWindowsList->item(i);
 		QString itemRegion = item->data(Qt::UserRole).toString();
 
 		if (itemRegion == window)
@@ -213,4 +212,30 @@ int SceneSwitcher::IgnoreIdleWindowsFindByData(const QString& window)
 	}
 
 	return idx;
+}
+
+void SaveIgnoreIdleWindows(obs_data_array_t*& array) {
+	for (string& window : switcher->ignoreIdleWindows)
+	{
+		obs_data_t* array_obj = obs_data_create();
+		obs_data_set_string(array_obj, "window", window.c_str());
+		obs_data_array_push_back(array, array_obj);
+		obs_data_release(array_obj);
+	}
+}
+
+void LoadIgnoreIdleWindows(obs_data_array_t*& array) {
+	switcher->ignoreIdleWindows.clear();
+	size_t count = obs_data_array_count(array);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		obs_data_t* array_obj = obs_data_array_item(array, i);
+
+		const char* window = obs_data_get_string(array_obj, "window");
+
+		switcher->ignoreIdleWindows.emplace_back(window);
+
+		obs_data_release(array_obj);
+	}
 }

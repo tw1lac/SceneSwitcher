@@ -101,7 +101,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="noMatchSwitchScene">
+              <widget class="QComboBox" name="noMatchSwitchScenes">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -367,7 +367,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_12">
          <item>
-          <widget class="QComboBox" name="windows">
+          <widget class="QComboBox" name="windowTitleWindows">
            <property name="editable">
             <bool>true</bool>
            </property>
@@ -377,7 +377,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="scenes">
+          <widget class="QComboBox" name="windowTitleScenes">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -393,7 +393,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="transitions"/>
+          <widget class="QComboBox" name="windowTitleTransitions"/>
          </item>
          <item>
           <widget class="QCheckBox" name="fullscreenCheckBox">
@@ -425,7 +425,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="switches">
+        <widget class="QListWidget" name="windowTitleSwitchesList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -547,7 +547,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="ignoreWindows">
+        <widget class="QListWidget" name="ignoreWindowsList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -823,7 +823,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="screenRegions">
+        <widget class="QListWidget" name="screenRegionSwitchesList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -941,7 +941,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="pixelColors"/>
+         <widget class="QLineEdit" name="pixelColorsLineEdit"/>
         </item>
         <item>
          <spacer name="horizontalSpacer_15">
@@ -969,7 +969,7 @@
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_40">
         <item>
-         <widget class="QComboBox" name="pixelScenes">
+         <widget class="QComboBox" name="pixelColorScenes">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -985,7 +985,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="pixelTransitions"/>
+         <widget class="QComboBox" name="pixelColorTransitions"/>
         </item>
         <item>
          <spacer name="horizontalSpacer_35">
@@ -1002,7 +1002,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QListWidget" name="pixelSwitches">
+      <widget class="QListWidget" name="pixelColorSwitchesList">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -1107,7 +1107,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="sceneRoundTripScenes1">
+          <widget class="QComboBox" name="sceneRoundTripFromScenes">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -1130,7 +1130,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="sceneRoundTripScenes2">
+          <widget class="QComboBox" name="sceneRoundTripToScenes">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -1195,7 +1195,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="sceneRoundTrips">
+        <widget class="QListWidget" name="sceneRoundTripSwitchesList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1381,7 +1381,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="executables">
+        <widget class="QListWidget" name="executableSwitchesList">
          <property name="enabled">
           <bool>true</bool>
          </property>
@@ -1589,7 +1589,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="ignoreIdleWindows">
+        <widget class="QListWidget" name="ignoreIdleWindowsList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1698,7 +1698,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="pauseScenes">
+        <widget class="QListWidget" name="pauseScenesList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1820,7 +1820,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="pauseWindows">
+        <widget class="QListWidget" name="pauseWindowsList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1910,7 +1910,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="transitionsScene1">
+            <widget class="QComboBox" name="transitionsFromScenes">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1933,7 +1933,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="transitionsScene2">
+            <widget class="QComboBox" name="transitionsToScenes">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1974,7 +1974,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QListWidget" name="sceneTransitions">
+          <widget class="QListWidget" name="sceneTransitionsList">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -2069,7 +2069,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="defaultTransitionsScene">
+            <widget class="QComboBox" name="defaultTransitionsScenes">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -2110,7 +2110,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QListWidget" name="defaultTransitions">
+          <widget class="QListWidget" name="defaultTransitionsList">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -2523,7 +2523,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="fileScenesList">
+        <widget class="QListWidget" name="fileSwitchesList">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>

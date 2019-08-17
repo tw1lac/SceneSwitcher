@@ -6,8 +6,8 @@
 
 void SceneSwitcher::on_sceneRoundTripAdd_clicked()
 {
-	QString scene1Name = ui->sceneRoundTripScenes1->currentText();
-	QString scene2Name = ui->sceneRoundTripScenes2->currentText();
+	QString scene1Name = ui->sceneRoundTripFromScenes->currentText();
+	QString scene2Name = ui->sceneRoundTripToScenes->currentText();
 	QString transitionName = ui->sceneRoundTripTransitions->currentText();
 
 	if (scene1Name.isEmpty() || scene2Name.isEmpty())
@@ -29,7 +29,7 @@ void SceneSwitcher::on_sceneRoundTripAdd_clicked()
 
 	if (idx == -1)
 	{
-		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneRoundTrips);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneRoundTripSwitchesList);
 		item->setData(Qt::UserRole, v);
 
 		lock_guard<mutex> lock(switcher->m);
@@ -40,7 +40,7 @@ void SceneSwitcher::on_sceneRoundTripAdd_clicked()
 	}
 	else
 	{
-		QListWidgetItem* item = ui->sceneRoundTrips->item(idx);
+		QListWidgetItem* item = ui->sceneRoundTripSwitchesList->item(idx);
 		item->setText(text);
 
 		{
@@ -59,13 +59,13 @@ void SceneSwitcher::on_sceneRoundTripAdd_clicked()
 			}
 		}
 
-		ui->sceneRoundTrips->sortItems();
+		ui->sceneRoundTripSwitchesList->sortItems();
 	}
 }
 
 void SceneSwitcher::on_sceneRoundTripRemove_clicked()
 {
-	QListWidgetItem* item = ui->sceneRoundTrips->currentItem();
+	QListWidgetItem* item = ui->sceneRoundTripSwitchesList->currentItem();
 	if (!item)
 		return;
 
@@ -131,7 +131,7 @@ void SceneSwitcher::on_autoStopScenes_currentTextChanged(const QString& text)
 void SceneSwitcher::on_sceneRoundTripSave_clicked()
 {
 	QString directory = QFileDialog::getSaveFileName(
-		this, tr("Save Scene Round Trip to file ..."), QDir::currentPath(), tr("Text files (*.txt)"));
+		this, tr("Save Scene UGG UGG Round Trip to file ..."), QDir::currentPath(), tr("Text files (*.txt)"));
 	if (!directory.isEmpty())
 	{
 		QFile file(directory);
@@ -157,7 +157,7 @@ void SceneSwitcher::on_sceneRoundTripLoad_clicked()
 	lock_guard<mutex> lock(switcher->m);
 
 	QString directory = QFileDialog::getOpenFileName(
-		this, tr("Select a file to read Scene Round Trip from ..."), QDir::currentPath(), tr("Text files (*.txt)"));
+		this, tr("Select a file to read UGG Scene Round Trip from ..."), QDir::currentPath(), tr("Text files (*.txt)"));
 	if (!directory.isEmpty())
 	{
 		QFile file(directory);
@@ -198,16 +198,15 @@ void SceneSwitcher::on_sceneRoundTripLoad_clicked()
 			return;
 
 		switcher->sceneRoundTripSwitches.clear();
-		ui->sceneRoundTrips->clear();
+		ui->sceneRoundTripSwitchesList->clear();
 		switcher->sceneRoundTripSwitches = newSceneRoundTripSwitch;
 		for (SceneRoundTripSwitch s : switcher->sceneRoundTripSwitches)
 		{
-			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(s.sceneRoundTripStr), ui->sceneRoundTrips);
+			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(s.sceneRoundTripStr), ui->sceneRoundTripSwitchesList);
 			item->setData(Qt::UserRole, QString::fromStdString(s.sceneRoundTripStr));
 		}
 	}
 }
-
 
 void SwitcherData::checkSceneRoundTrip(bool& match, OBSWeakSource& scene, OBSWeakSource& transition, unique_lock<mutex>& lock)
 {
@@ -250,7 +249,7 @@ void SceneSwitcher::on_sceneRoundTrips_currentRowChanged(int idx)
 	if (idx == -1)
 		return;
 
-	QListWidgetItem* item = ui->sceneRoundTrips->item(idx);
+	QListWidgetItem* item = ui->sceneRoundTripSwitchesList->item(idx);
 
 	QString sceneRoundTrip = item->text();
 
@@ -263,8 +262,8 @@ void SceneSwitcher::on_sceneRoundTrips_currentRowChanged(int idx)
 			string scene2 = GetWeakSourceName(s.scene2);
 			string transitionName = GetWeakSourceName(s.transition);
 			int delay = s.delay;
-			ui->sceneRoundTripScenes1->setCurrentText(scene1.c_str());
-			ui->sceneRoundTripScenes2->setCurrentText(scene2.c_str());
+			ui->sceneRoundTripFromScenes->setCurrentText(scene1.c_str());
+			ui->sceneRoundTripToScenes->setCurrentText(scene2.c_str());
 			ui->sceneRoundTripTransitions->setCurrentText(transitionName.c_str());
 			ui->sceneRoundTripSpinBox->setValue((double)delay/1000);
 			break;
@@ -272,16 +271,15 @@ void SceneSwitcher::on_sceneRoundTrips_currentRowChanged(int idx)
 	}
 }
 
-
 int SceneSwitcher::SceneRoundTripFindByData(const QString& scene1)
 {
 	QRegExp rx(scene1 + " ->.*");
-	int count = ui->sceneRoundTrips->count();
+	int count = ui->sceneRoundTripSwitchesList->count();
 	int idx = -1;
 
 	for (int i = 0; i < count; i++)
 	{
-		QListWidgetItem* item = ui->sceneRoundTrips->item(i);
+		QListWidgetItem* item = ui->sceneRoundTripSwitchesList->item(i);
 		QString itemString = item->data(Qt::UserRole).toString();
 
 		if (rx.exactMatch(itemString))
@@ -293,7 +291,6 @@ int SceneSwitcher::SceneRoundTripFindByData(const QString& scene1)
 
 	return idx;
 }
-
 
 void SwitcherData::autoStopStreamAndRecording()
 {
@@ -309,4 +306,58 @@ void SwitcherData::autoStopStreamAndRecording()
 	}
 	obs_source_release(currentSource);
 	obs_weak_source_release(ws);
+}
+
+void SaveScreenRoundTripSwitcher(obs_data_array_t*& array) {
+	for (SceneRoundTripSwitch& s : switcher->sceneRoundTripSwitches)
+	{
+		obs_data_t* array_obj = obs_data_create();
+
+		obs_source_t* source1 = obs_weak_source_get_source(s.scene1);
+		obs_source_t* source2 = obs_weak_source_get_source(s.scene2);
+		obs_source_t* transition = obs_weak_source_get_source(s.transition);
+		if (source1 && (s.usePreviousScene || source2) && transition)
+		{
+			const char* sceneName1 = obs_source_get_name(source1);
+			const char* sceneName2 = obs_source_get_name(source2);
+			const char* transitionName = obs_source_get_name(transition);
+			obs_data_set_string(array_obj, "sceneRoundTripScene1", sceneName1);
+			obs_data_set_string(array_obj, "sceneRoundTripScene2",
+				s.usePreviousScene ? PREVIOUS_SCENE_NAME : sceneName2);
+			obs_data_set_string(array_obj, "transition", transitionName);
+			obs_data_set_int(array_obj, "sceneRoundTripDelay", s.delay / 1000);	//delay stored in two separate values
+			obs_data_set_int(array_obj, "sceneRoundTripDelayMs", s.delay % 1000);	//to be compatible with older versions
+			obs_data_set_string(array_obj, "sceneRoundTripStr", s.sceneRoundTripStr.c_str());
+			obs_data_array_push_back(array, array_obj);
+			obs_source_release(source1);
+			obs_source_release(source2);
+			obs_source_release(transition);
+		}
+
+		obs_data_release(array_obj);
+	}
+}
+
+void LoadScreenRoundTripSwitcher(obs_data_array_t*& array) {
+	switcher->sceneRoundTripSwitches.clear();
+	size_t count = obs_data_array_count(array);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		obs_data_t* array_obj = obs_data_array_item(array, i);
+
+		const char* scene1 = obs_data_get_string(array_obj, "sceneRoundTripScene1");
+		const char* scene2 = obs_data_get_string(array_obj, "sceneRoundTripScene2");
+		const char* transition = obs_data_get_string(array_obj, "transition");
+		int delay = obs_data_get_int(array_obj, "sceneRoundTripDelay");			//delay stored in two separate values
+		delay = delay * 1000 + obs_data_get_int(array_obj, "sceneRoundTripDelayMs"); 	//to be compatible with older versions
+		string str = MakeSceneRoundTripSwitchName(scene1, scene2, transition, ((double)delay) / 1000.0).toUtf8().constData();
+		const char* sceneRoundTripStr = str.c_str();
+
+		switcher->sceneRoundTripSwitches.emplace_back(GetWeakSourceByName(scene1),
+			GetWeakSourceByName(scene2), GetWeakTransitionByName(transition), delay,
+			(strcmp(scene2, PREVIOUS_SCENE_NAME) == 0), sceneRoundTripStr);
+
+		obs_data_release(array_obj);
+	}
 }

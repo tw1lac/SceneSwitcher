@@ -33,7 +33,7 @@ void SceneSwitcher::on_noMatchDontSwitch_clicked()
 
 	lock_guard<mutex> lock(switcher->m);
 	switcher->switchIfNotMatching = NO_SWITCH;
-	ui->noMatchSwitchScene->setEnabled(false);
+	ui->noMatchSwitchScenes->setEnabled(false);
 }
 
 void SceneSwitcher::on_noMatchSwitch_clicked()
@@ -43,8 +43,8 @@ void SceneSwitcher::on_noMatchSwitch_clicked()
 
 	lock_guard<mutex> lock(switcher->m);
 	switcher->switchIfNotMatching = SWITCH;
-	ui->noMatchSwitchScene->setEnabled(true);
-	UpdateNonMatchingScene(ui->noMatchSwitchScene->currentText());
+	ui->noMatchSwitchScenes->setEnabled(true);
+	UpdateNonMatchingScene(ui->noMatchSwitchScenes->currentText());
 }
 
 void SceneSwitcher::on_noMatchRandomSwitch_clicked()
@@ -54,7 +54,7 @@ void SceneSwitcher::on_noMatchRandomSwitch_clicked()
 
 	lock_guard<mutex> lock(switcher->m);
 	switcher->switchIfNotMatching = RANDOM_SWITCH;
-	ui->noMatchSwitchScene->setEnabled(false);
+	ui->noMatchSwitchScenes->setEnabled(false);
 }
 
 void SceneSwitcher::on_noMatchSwitchScene_currentTextChanged(const QString& text)

@@ -42,3 +42,20 @@ bool SwitcherData::prioFuncsValid()
 	return true;
 }
 
+void SavePriorityOrder(obs_data_t*& obj) {
+	for (int i = 0; i < switcher->functionNamesByPriority.size(); i++) {
+		obs_data_set_int(obj, "priority" + i, switcher->functionNamesByPriority[i]);
+	}
+}
+
+void LoadPriorityOrder(obs_data_t*& obj) {
+	for (int i = 0; i < switcher->functionNamesByPriority.size(); i++) {
+		obs_data_set_default_int(obj, "priority" + i, switcher->functionNamesByPriority[i]);
+		switcher->functionNamesByPriority[i] = (obs_data_get_int(obj, "priority" + i));
+	}
+
+	if (!switcher->prioFuncsValid())
+	{
+		switcher->functionNamesByPriority = vector<int>{ DEFAULT_PRIORITY };
+	}
+}

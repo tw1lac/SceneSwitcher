@@ -42,7 +42,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 
 	switcher->Prune();
 
-	const QRegularExpression scenesRegex(".*cenes\\d?");
+	const QRegularExpression scenesRegex(".*[Ss]cenes?\\d?");
 	QList<QComboBox*> sceneBoxes = ui->tabWidget->findChildren<QComboBox*>(scenesRegex);
 
 	//Adds all scenes to the scene-list
@@ -72,7 +72,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		temp++;
 	}
 
-	ui->sceneRoundTripScenes2->addItem(PREVIOUS_SCENE_NAME);
+	ui->sceneRoundTripToScenes->addItem(PREVIOUS_SCENE_NAME);
 	ui->idleScenes->addItem(PREVIOUS_SCENE_NAME);
 
 
@@ -110,19 +110,19 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 	if (switcher->switchIfNotMatching == SWITCH)
 	{
 		ui->noMatchSwitch->setChecked(true);
-		ui->noMatchSwitchScene->setEnabled(true);
+		ui->noMatchSwitchScenes->setEnabled(true);
 	}
 	else if (switcher->switchIfNotMatching == NO_SWITCH)
 	{
 		ui->noMatchDontSwitch->setChecked(true);
-		ui->noMatchSwitchScene->setEnabled(false);
+		ui->noMatchSwitchScenes->setEnabled(false);
 	}
 	else
 	{
 		ui->noMatchRandomSwitch->setChecked(true);
-		ui->noMatchSwitchScene->setEnabled(false);
+		ui->noMatchSwitchScenes->setEnabled(false);
 	}
-	ui->noMatchSwitchScene->setCurrentText(GetWeakSourceName(switcher->nonMatchingScene).c_str());
+	ui->noMatchSwitchScenes->setCurrentText(GetWeakSourceName(switcher->nonMatchingScene).c_str());
 	ui->checkInterval->setValue(switcher->interval);
 
 
@@ -132,7 +132,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 
 	for (string& window : windows)
 	{
-		ui->windows->addItem(window.c_str());
+		ui->windowTitleWindows->addItem(window.c_str());
 		ui->ignoreWindowsWindows->addItem(window.c_str());
 		ui->pauseWindowsWindows->addItem(window.c_str());
 		ui->ignoreIdleWindowsWindows->addItem(window.c_str());
@@ -155,7 +155,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString text = MakeSwitchNameExecutable(
 			sceneName.c_str(), s.mExe, transitionName.c_str(), s.mInFocus);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->executables);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->executableSwitchesList);
 		item->setData(Qt::UserRole, s.mExe);
 	}
 
@@ -166,7 +166,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString text = MakeSwitchName(
 			sceneName.c_str(), s.window.c_str(), transitionName.c_str(), s.fullscreen, s.checkBackground);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->switches);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->windowTitleSwitchesList);
 		item->setData(Qt::UserRole, s.window.c_str());
 	}
 
@@ -177,18 +177,18 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString text = MakeScreenRegionSwitchName(
 			sceneName.c_str(), transitionName.c_str(), s.minX, s.minY, s.maxX, s.maxY);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->screenRegions);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->screenRegionSwitchesList);
 		item->setData(Qt::UserRole, s.regionStr.c_str());
 	}
 
-	for (auto& s : switcher->pixels)
+	for (auto& s : switcher->pixelColorSwitches)
 	{
 		string sceneName = GetWeakSourceName(s.scene);
 		string transitionName = GetWeakSourceName(s.transition);
 		QString text = MakePixelSwitchName(
 			sceneName.c_str(), transitionName.c_str(), s.pxX, s.pxY, s.colorsStr.c_str());
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->pixelSwitches);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->pixelColorSwitchesList);
 		item->setData(Qt::UserRole, s.pixelStr.c_str());
 	}
 
@@ -209,7 +209,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		string sceneName = GetWeakSourceName(scene);
 		QString text = QString::fromStdString(sceneName);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->pauseScenes);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->pauseScenesList);
 		item->setData(Qt::UserRole, text);
 	}
 
@@ -217,7 +217,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 	{
 		QString text = QString::fromStdString(window);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->pauseWindows);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->pauseWindowsList);
 		item->setData(Qt::UserRole, text);
 	}
 
@@ -225,7 +225,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 	{
 		QString text = QString::fromStdString(window);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->ignoreWindows);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->ignoreWindowsList);
 		item->setData(Qt::UserRole, text);
 	}
 
@@ -238,7 +238,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString text = MakeSceneRoundTripSwitchName(
 			sceneName1.c_str(), sceneName2.c_str(), transitionName.c_str(), (double)s.delay / 1000);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneRoundTrips);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneRoundTripSwitchesList);
 		item->setData(Qt::UserRole, text);
 
 		if (s.delay < smallestDelay)
@@ -254,7 +254,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString text = MakeSceneTransitionName(
 			sceneName1.c_str(), sceneName2.c_str(), transitionName.c_str());
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneTransitions);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneTransitionsList);
 		item->setData(Qt::UserRole, text);
 	}
 	//(transitionDurationLongerThanInterval(switcher->interval)) ? ui->transitionWarning->setVisible(true) : ui->transitionWarning->setVisible(false);
@@ -266,7 +266,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString text = MakeDefaultSceneTransitionName(
 			sceneName.c_str(), transitionName.c_str());
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->defaultTransitions);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->defaultTransitionsList);
 		item->setData(Qt::UserRole, text);
 	}
 
@@ -274,7 +274,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 	{
 		QString text = QString::fromStdString(window);
 
-		QListWidgetItem* item = new QListWidgetItem(text, ui->ignoreIdleWindows);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->ignoreIdleWindowsList);
 		item->setData(Qt::UserRole, text);
 	}
 
@@ -296,7 +296,7 @@ SceneSwitcher::SceneSwitcher(QWidget* parent)
 		QString listText = MakeFileSwitchName(
 			sceneName.c_str(), transitionName.c_str(), s.file.c_str(), s.text.c_str(), s.useRegex, s.useTime);
 
-		QListWidgetItem* item = new QListWidgetItem(listText, ui->fileScenesList);
+		QListWidgetItem* item = new QListWidgetItem(listText, ui->fileSwitchesList);
 		item->setData(Qt::UserRole, listText);
 	}
 
@@ -388,7 +388,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 	{
 		lock_guard<mutex> lock(switcher->m);
 		obs_data_t* obj = obs_data_create();
-		obs_data_array_t* array = obs_data_array_create();
+		obs_data_array_t* windowTitleArray = obs_data_array_create();
 		obs_data_array_t* screenRegionArray = obs_data_array_create();
 		obs_data_array_t* pixelColorArray = obs_data_array_create();
 		obs_data_array_t* pauseScenesArray = obs_data_array_create();
@@ -404,262 +404,32 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 
 		switcher->Prune();
 
-		for (WindowSceneSwitch& s : switcher->windowSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
+		SaveWindowSwitcher(windowTitleArray);
 
-			obs_source_t* source = obs_weak_source_get_source(s.scene);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "scene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_string(array_obj, "window_title", s.window.c_str());
-				obs_data_set_bool(array_obj, "fullscreen", s.fullscreen);
-				obs_data_set_bool(array_obj, "checkBackground", s.checkBackground);
-				obs_data_array_push_back(array, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
+		SaveScreenRegionSwitcher(screenRegionArray);
 
-			obs_data_release(array_obj);
-		}
+		SaveWindowSwitcher(pixelColorArray);
 
-		for (ScreenRegionSwitch& s : switcher->screenRegionSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
+		SavePauseSwitcher(pauseScenesArray);
 
-			obs_source_t* source = obs_weak_source_get_source(s.scene);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "screenRegionScene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_int(array_obj, "minX", s.minX);
-				obs_data_set_int(array_obj, "minY", s.minY);
-				obs_data_set_int(array_obj, "maxX", s.maxX);
-				obs_data_set_int(array_obj, "maxY", s.maxY);
-				obs_data_set_string(array_obj, "screenRegionStr", s.regionStr.c_str());
-				obs_data_array_push_back(screenRegionArray, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
+		SavePauseWindowSwitcher(pauseWindowsArray);
 
-			obs_data_release(array_obj);
-		}
+		SaveIgnoreWindowSwitcher(ignoreWindowsArray);
 
-		for (PixelSwitch& s : switcher->pixels)
-		{
-			obs_data_t* array_obj = obs_data_create();
+		SaveScreenRoundTripSwitcher(sceneRoundTripArray);
 
-			obs_source_t* source = obs_weak_source_get_source(s.scene);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "pixelColorScene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_int(array_obj, "pxX", s.pxX);
-				obs_data_set_int(array_obj, "pxY", s.pxY);
-				obs_data_set_string(array_obj, "colorsStr", s.colorsStr.c_str());
-				obs_data_set_string(array_obj, "pixelStr", s.pixelStr.c_str());
-				obs_data_array_push_back(pixelColorArray, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
+		SaveScreenTransitions(sceneTransitionsArray);
 
-			obs_data_release(array_obj);
-		}
+		SaveDefaultScreenTransitions(defaultTransitionsArray);
 
-		for (OBSWeakSource& scene : switcher->pauseScenesSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
+		SaveExecutableSwitcher(executableArray);
 
-			obs_source_t* source = obs_weak_source_get_source(scene);
-			if (source)
-			{
-				const char* n = obs_source_get_name(source);
-				obs_data_set_string(array_obj, "pauseScene", n);
-				obs_data_array_push_back(pauseScenesArray, array_obj);
-				obs_source_release(source);
-			}
+		SaveFileSwitcher(fileArray);
 
-			obs_data_release(array_obj);
-		}
+		SaveRandomSwitcher(randomArray);
 
-		for (string& window : switcher->pauseWindowsSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
-			obs_data_set_string(array_obj, "pauseWindow", window.c_str());
-			obs_data_array_push_back(pauseWindowsArray, array_obj);
-			obs_data_release(array_obj);
-		}
+		SaveIgnoreIdleWindows(ignoreIdleWindowsArray);
 
-		for (string& window : switcher->ignoreWindowsSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
-			obs_data_set_string(array_obj, "ignoreWindow", window.c_str());
-			obs_data_array_push_back(ignoreWindowsArray, array_obj);
-			obs_data_release(array_obj);
-		}
-
-		for (SceneRoundTripSwitch& s : switcher->sceneRoundTripSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
-
-			obs_source_t* source1 = obs_weak_source_get_source(s.scene1);
-			obs_source_t* source2 = obs_weak_source_get_source(s.scene2);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-			if (source1 && (s.usePreviousScene || source2) && transition)
-			{
-				const char* sceneName1 = obs_source_get_name(source1);
-				const char* sceneName2 = obs_source_get_name(source2);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "sceneRoundTripScene1", sceneName1);
-				obs_data_set_string(array_obj, "sceneRoundTripScene2",
-					s.usePreviousScene ? PREVIOUS_SCENE_NAME : sceneName2);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_int(array_obj, "sceneRoundTripDelay", s.delay / 1000);	//delay stored in two separate values
-				obs_data_set_int(array_obj, "sceneRoundTripDelayMs", s.delay % 1000);	//to be compatible with older versions
-				obs_data_set_string(array_obj, "sceneRoundTripStr", s.sceneRoundTripStr.c_str());
-				obs_data_array_push_back(sceneRoundTripArray, array_obj);
-				obs_source_release(source1);
-				obs_source_release(source2);
-				obs_source_release(transition);
-			}
-
-			obs_data_release(array_obj);
-		}
-
-		for (SceneTransition& s : switcher->sceneTransitions)
-		{
-			obs_data_t* array_obj = obs_data_create();
-
-			obs_source_t* source1 = obs_weak_source_get_source(s.scene1);
-			obs_source_t* source2 = obs_weak_source_get_source(s.scene2);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-			if (source1 && source2 && transition)
-			{
-				const char* sceneName1 = obs_source_get_name(source1);
-				const char* sceneName2 = obs_source_get_name(source2);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "Scene1", sceneName1);
-				obs_data_set_string(array_obj, "Scene2", sceneName2);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_string(array_obj, "Str", s.sceneTransitionStr.c_str());
-				obs_data_array_push_back(sceneTransitionsArray, array_obj);
-				obs_source_release(source1);
-				obs_source_release(source2);
-				obs_source_release(transition);
-			}
-
-			obs_data_release(array_obj);
-		}
-
-		for (DefaultSceneTransition& s : switcher->defaultSceneTransitions)
-		{
-			obs_data_t* array_obj = obs_data_create();
-
-			obs_source_t* source = obs_weak_source_get_source(s.scene);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "Scene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_string(array_obj, "Str", s.sceneTransitionStr.c_str());
-				obs_data_array_push_back(defaultTransitionsArray, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
-
-			obs_data_release(array_obj);
-		}
-
-		for (ExecutableSceneSwitch& s : switcher->executableSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
-
-			obs_source_t* source = obs_weak_source_get_source(s.mScene);
-			obs_source_t* transition = obs_weak_source_get_source(s.mTransition);
-
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "scene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_string(array_obj, "exefile", s.mExe.toUtf8());
-				obs_data_set_bool(array_obj, "infocus", s.mInFocus);
-				obs_data_array_push_back(executableArray, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
-
-			obs_data_release(array_obj);
-		}
-
-		for (RandomSwitch& s : switcher->randomSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
-
-			obs_source_t* source = obs_weak_source_get_source(s.scene);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "scene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_double(array_obj, "delay", s.delay);
-				obs_data_set_string(array_obj, "str", s.randomSwitchStr.c_str());
-				obs_data_array_push_back(randomArray, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
-
-			obs_data_release(array_obj);
-		}
-
-		for (string& window : switcher->ignoreIdleWindows)
-		{
-			obs_data_t* array_obj = obs_data_create();
-			obs_data_set_string(array_obj, "window", window.c_str());
-			obs_data_array_push_back(ignoreIdleWindowsArray, array_obj);
-			obs_data_release(array_obj);
-		}
-
-		for (FileSwitch& s : switcher->fileSwitches)
-		{
-			obs_data_t* array_obj = obs_data_create();
-
-			obs_source_t* source = obs_weak_source_get_source(s.scene);
-			obs_source_t* transition = obs_weak_source_get_source(s.transition);
-
-			if (source && transition)
-			{
-				const char* sceneName = obs_source_get_name(source);
-				const char* transitionName = obs_source_get_name(transition);
-				obs_data_set_string(array_obj, "scene", sceneName);
-				obs_data_set_string(array_obj, "transition", transitionName);
-				obs_data_set_string(array_obj, "file", s.file.c_str());
-				obs_data_set_string(array_obj, "text", s.text.c_str());
-				obs_data_set_bool(array_obj, "useRegex", s.useRegex);
-				obs_data_set_bool(array_obj, "useTime", s.useTime);
-				obs_data_array_push_back(fileArray, array_obj);
-				obs_source_release(source);
-				obs_source_release(transition);
-			}
-
-			obs_data_release(array_obj);
-		}
 
 		string nonMatchingSceneName = GetWeakSourceName(switcher->nonMatchingScene);
 
@@ -668,7 +438,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		obs_data_set_int(obj, "switch_if_not_matching", switcher->switchIfNotMatching);
 		obs_data_set_bool(obj, "active", !switcher->stop);
 
-		obs_data_set_array(obj, "switches", array);
+		obs_data_set_array(obj, "switches", windowTitleArray);
 		obs_data_set_array(obj, "screenRegion", screenRegionArray);
 		obs_data_set_array(obj, "pixelColor", pixelColorArray);
 		obs_data_set_array(obj, "pauseScenes", pauseScenesArray);
@@ -700,17 +470,15 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		obs_data_set_bool(obj, "writeEnabled", switcher->fileIO.writeEnabled);
 		obs_data_set_string(obj, "writePath", switcher->fileIO.writePath.c_str());
 
-		obs_data_set_int(obj, "priority0", switcher->functionNamesByPriority[0]);
-		obs_data_set_int(obj, "priority1", switcher->functionNamesByPriority[1]);
-		obs_data_set_int(obj, "priority2", switcher->functionNamesByPriority[2]);
-		obs_data_set_int(obj, "priority3", switcher->functionNamesByPriority[3]);
-		obs_data_set_int(obj, "priority4", switcher->functionNamesByPriority[4]);
-		obs_data_set_int(obj, "priority5", switcher->functionNamesByPriority[5]);
-		obs_data_set_int(obj, "priority6", switcher->functionNamesByPriority[6]);
+		SavePriorityOrder(obj);
+
+		/*for (int i = 0; i < switcher->functionNamesByPriority.size(); i++) {
+			obs_data_set_int(obj, "priority" + i, switcher->functionNamesByPriority[i]);
+		}*/
 
 		obs_data_set_obj(save_data, "advanced-scene-switcher", obj);
 
-		obs_data_array_release(array);
+		obs_data_array_release(windowTitleArray);
 		obs_data_array_release(screenRegionArray);
 		obs_data_array_release(pixelColorArray);
 		obs_data_array_release(pauseScenesArray);
@@ -731,7 +499,7 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		switcher->m.lock();
 
 		obs_data_t* obj = obs_data_get_obj(save_data, "advanced-scene-switcher");
-		obs_data_array_t* array = obs_data_get_array(obj, "switches");
+		obs_data_array_t* windowTitleArray = obs_data_get_array(obj, "switches");
 		obs_data_array_t* screenRegionArray = obs_data_get_array(obj, "screenRegion");
 		obs_data_array_t* pixelColorArray = obs_data_get_array(obj, "pixelColor");
 		obs_data_array_t* pauseScenesArray = obs_data_get_array(obj, "pauseScenes");
@@ -757,239 +525,35 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		bool active = obs_data_get_bool(obj, "active");
 
 		switcher->nonMatchingScene = GetWeakSourceByName(nonMatchingScene.c_str());
+		
+		//size_t count; //ta bort senare och lägg i loadfunktionerna
 
-		switcher->windowSwitches.clear();
-		size_t count = obs_data_array_count(array);
+		LoadWindowSwitcher(windowTitleArray);
 
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(array, i);
+		LoadScreenRegionSwitcher(screenRegionArray);
 
-			const char* scene = obs_data_get_string(array_obj, "scene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			const char* window = obs_data_get_string(array_obj, "window_title");
-			bool fullscreen = obs_data_get_bool(array_obj, "fullscreen");
-			bool checkBackground = obs_data_get_bool(array_obj, "checkBackground");
+		LoadWindowSwitcher(pixelColorArray);
 
-			switcher->windowSwitches.emplace_back(GetWeakSourceByName(scene), window,
-				GetWeakTransitionByName(transition), fullscreen, checkBackground);
+		LoadPauseSwitcher(pauseScenesArray);
 
-			obs_data_release(array_obj);
-		}
+		LoadPauseWindowSwitcher(pauseWindowsArray);
 
-		switcher->screenRegionSwitches.clear();
-		count = obs_data_array_count(screenRegionArray);
+		LoadIgnoreWindowSwitcher(ignoreWindowsArray);
 
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(screenRegionArray, i);
+		LoadScreenRoundTripSwitcher(sceneRoundTripArray);
 
-			const char* scene = obs_data_get_string(array_obj, "screenRegionScene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			int minX = obs_data_get_int(array_obj, "minX");
-			int minY = obs_data_get_int(array_obj, "minY");
-			int maxX = obs_data_get_int(array_obj, "maxX");
-			int maxY = obs_data_get_int(array_obj, "maxY");
-			string regionStr = obs_data_get_string(array_obj, "screenRegionStr");
+		LoadScreenTransitions(sceneTransitionsArray);
 
-			switcher->screenRegionSwitches.emplace_back(GetWeakSourceByName(scene),
-				GetWeakTransitionByName(transition), minX, minY, maxX, maxY, regionStr);
+		LoadDefaultScreenTransitions(defaultTransitionsArray);
 
-			obs_data_release(array_obj);
-		}
+		LoadExecutableSwitcher(executableArray);
 
-		switcher->pixels.clear();
-		count = obs_data_array_count(pixelColorArray);
+		LoadIgnoreIdleWindows(ignoreIdleWindowsArray);
 
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(pixelColorArray, i);
+		LoadRandomSwitcher(randomArray);
 
-			const char* scene = obs_data_get_string(array_obj, "pixelScene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			int pxX = obs_data_get_int(array_obj, "pxX");
-			int pxY = obs_data_get_int(array_obj, "pxY");
-			string colorsStr = obs_data_get_string(array_obj, "colorsStr");
-			string pixelStr = obs_data_get_string(array_obj, "pixelStr");
+		LoadFileSwitcher(fileArray);
 
-			switcher->pixels.emplace_back(GetWeakSourceByName(scene),
-				GetWeakTransitionByName(transition), pxX, pxY, colorsStr, pixelStr);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->pauseScenesSwitches.clear();
-		count = obs_data_array_count(pauseScenesArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(pauseScenesArray, i);
-
-			const char* scene = obs_data_get_string(array_obj, "pauseScene");
-
-			switcher->pauseScenesSwitches.emplace_back(GetWeakSourceByName(scene));
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->pauseWindowsSwitches.clear();
-		count = obs_data_array_count(pauseWindowsArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(pauseWindowsArray, i);
-
-			const char* window = obs_data_get_string(array_obj, "pauseWindow");
-
-			switcher->pauseWindowsSwitches.emplace_back(window);
-
-			obs_data_release(array_obj);
-		}
-
-		obs_data_array_release(pauseWindowsArray);
-
-		switcher->ignoreWindowsSwitches.clear();
-		count = obs_data_array_count(ignoreWindowsArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(ignoreWindowsArray, i);
-
-			const char* window = obs_data_get_string(array_obj, "ignoreWindow");
-
-			switcher->ignoreWindowsSwitches.emplace_back(window);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->sceneRoundTripSwitches.clear();
-		count = obs_data_array_count(sceneRoundTripArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(sceneRoundTripArray, i);
-
-			const char* scene1 = obs_data_get_string(array_obj, "sceneRoundTripScene1");
-			const char* scene2 = obs_data_get_string(array_obj, "sceneRoundTripScene2");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			int delay = obs_data_get_int(array_obj, "sceneRoundTripDelay");			//delay stored in two separate values
-			delay = delay * 1000 + obs_data_get_int(array_obj, "sceneRoundTripDelayMs"); 	//to be compatible with older versions
-			string str = MakeSceneRoundTripSwitchName(scene1, scene2, transition, ((double)delay)/1000.0).toUtf8().constData(); 
-			const char* sceneRoundTripStr = str.c_str();
-
-			switcher->sceneRoundTripSwitches.emplace_back(GetWeakSourceByName(scene1),
-				GetWeakSourceByName(scene2), GetWeakTransitionByName(transition), delay,
-				(strcmp(scene2, PREVIOUS_SCENE_NAME) == 0), sceneRoundTripStr);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->sceneTransitions.clear();
-		count = obs_data_array_count(sceneTransitionsArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(sceneTransitionsArray, i);
-
-			const char* scene1 = obs_data_get_string(array_obj, "Scene1");
-			const char* scene2 = obs_data_get_string(array_obj, "Scene2");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			const char* sceneTransitionsStr = obs_data_get_string(array_obj, "Str");
-
-			switcher->sceneTransitions.emplace_back(GetWeakSourceByName(scene1),
-				GetWeakSourceByName(scene2), GetWeakTransitionByName(transition),
-				sceneTransitionsStr);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->defaultSceneTransitions.clear();
-		count = obs_data_array_count(defaultTransitionsArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(defaultTransitionsArray, i);
-
-			const char* scene = obs_data_get_string(array_obj, "Scene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			const char* sceneTransitionsStr = obs_data_get_string(array_obj, "Str");
-
-			switcher->defaultSceneTransitions.emplace_back(GetWeakSourceByName(scene),
-				GetWeakTransitionByName(transition),
-				sceneTransitionsStr);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->executableSwitches.clear();
-		count = obs_data_array_count(executableArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(executableArray, i);
-
-			const char* scene = obs_data_get_string(array_obj, "scene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			const char* exe = obs_data_get_string(array_obj, "exefile");
-			bool infocus = obs_data_get_bool(array_obj, "infocus");
-
-			switcher->executableSwitches.emplace_back(
-				GetWeakSourceByName(scene), GetWeakTransitionByName(transition), exe, infocus);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->ignoreIdleWindows.clear();
-		count = obs_data_array_count(ignoreIdleWindowsArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(ignoreIdleWindowsArray, i);
-
-			const char* window = obs_data_get_string(array_obj, "window");
-
-			switcher->ignoreIdleWindows.emplace_back(window);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->randomSwitches.clear();
-		count = obs_data_array_count(randomArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(randomArray, i);
-
-			const char* scene = obs_data_get_string(array_obj, "scene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			double delay = obs_data_get_double(array_obj, "delay");
-			const char* str = obs_data_get_string(array_obj, "str");
-
-			switcher->randomSwitches.emplace_back(
-				GetWeakSourceByName(scene), GetWeakTransitionByName(transition), delay, str);
-
-			obs_data_release(array_obj);
-		}
-
-		switcher->fileSwitches.clear();
-		count = obs_data_array_count(fileArray);
-
-		for (size_t i = 0; i < count; i++)
-		{
-			obs_data_t* array_obj = obs_data_array_item(fileArray, i);
-
-			const char* scene = obs_data_get_string(array_obj, "scene");
-			const char* transition = obs_data_get_string(array_obj, "transition");
-			const char* file = obs_data_get_string(array_obj, "file");
-			const char* text = obs_data_get_string(array_obj, "text");
-			bool useRegex = obs_data_get_bool(array_obj, "useRegex");
-			bool useTime = obs_data_get_bool(array_obj, "useTime");
-
-			switcher->fileSwitches.emplace_back(
-				GetWeakSourceByName(scene), GetWeakTransitionByName(transition), file, text, useRegex, useTime);
-
-			obs_data_release(array_obj);
-		}
 
 		string autoStopScene = obs_data_get_string(obj, "autoStopSceneName");
 		switcher->autoStopEnable = obs_data_get_bool(obj, "autoStopEnable");
@@ -1012,34 +576,26 @@ static void SaveSceneSwitcher(obs_data_t* save_data, bool saving, void*)
 		switcher->fileIO.writeEnabled = obs_data_get_bool(obj, "writeEnabled");
 		switcher->fileIO.writePath = obs_data_get_string(obj, "writePath");
 
-		obs_data_set_default_int(obj, "priority0", DEFAULT_PRIORITY_0);
-		obs_data_set_default_int(obj, "priority1", DEFAULT_PRIORITY_1);
-		obs_data_set_default_int(obj, "priority2", DEFAULT_PRIORITY_2);
-		obs_data_set_default_int(obj, "priority3", DEFAULT_PRIORITY_3);
-		obs_data_set_default_int(obj, "priority4", DEFAULT_PRIORITY_4);
-		obs_data_set_default_int(obj, "priority5", DEFAULT_PRIORITY_5);
+		LoadPriorityOrder(obj);
 
-		switcher->functionNamesByPriority[0] = (obs_data_get_int(obj, "priority0"));
-		switcher->functionNamesByPriority[1] = (obs_data_get_int(obj, "priority1"));
-		switcher->functionNamesByPriority[2] = (obs_data_get_int(obj, "priority2"));
-		switcher->functionNamesByPriority[3] = (obs_data_get_int(obj, "priority3"));
-		switcher->functionNamesByPriority[4] = (obs_data_get_int(obj, "priority4"));
-		switcher->functionNamesByPriority[5] = (obs_data_get_int(obj, "priority5"));
-		if (!switcher->prioFuncsValid())
+
+		
+	/*	for (int i = 0; i < switcher->functionNamesByPriority.size(); i++) {
+			obs_data_set_default_int(obj, "priority" + i, switcher->functionNamesByPriority[i]);
+			switcher->functionNamesByPriority[i] = (obs_data_get_int(obj, "priority" +i));
+		}*/
+
+		/*if (!switcher->prioFuncsValid())
 		{
-			switcher->functionNamesByPriority[0] = (DEFAULT_PRIORITY_0);
-			switcher->functionNamesByPriority[1] = (DEFAULT_PRIORITY_1);
-			switcher->functionNamesByPriority[2] = (DEFAULT_PRIORITY_2);
-			switcher->functionNamesByPriority[3] = (DEFAULT_PRIORITY_3);
-			switcher->functionNamesByPriority[4] = (DEFAULT_PRIORITY_4);
-			switcher->functionNamesByPriority[5] = (DEFAULT_PRIORITY_5);
-		}
+			switcher->functionNamesByPriority = vector<int>{ DEFAULT_PRIORITY };
+		}*/
 
-		obs_data_array_release(array);
+		obs_data_array_release(windowTitleArray);
 		obs_data_array_release(screenRegionArray);
 		obs_data_array_release(pixelColorArray);
 		obs_data_array_release(pauseScenesArray);
 		obs_data_array_release(ignoreWindowsArray);
+		obs_data_array_release(pauseWindowsArray);
 		obs_data_array_release(sceneRoundTripArray);
 		obs_data_array_release(sceneTransitionsArray);
 		obs_data_array_release(defaultTransitionsArray);
@@ -1102,6 +658,7 @@ void SwitcherData::Thread()
 			continue;
 		}
 
+		//UGGUGG
 		for (int switchFuncName : functionNamesByPriority)
 		{
 			switch (switchFuncName) {

@@ -43,7 +43,7 @@ void SceneSwitcher::on_screenRegionAdd_clicked()
 	int maxX = ui->screenRegionMaxX->value();
 	int maxY = ui->screenRegionMaxY->value();
 
-	string regionStr = to_string(minX) + ", " + to_string(minY) + " x " + to_string(maxX) + ", "
+	string regionStr = to_string(minX) + ", " + to_string(minY) + "   x   " + to_string(maxX) + ", "
 		+ to_string(maxY);
 	QString region = QString::fromStdString(regionStr);
 
@@ -57,7 +57,7 @@ void SceneSwitcher::on_screenRegionAdd_clicked()
 
 	if (idx == -1)
 	{
-		QListWidgetItem* item = new QListWidgetItem(text, ui->screenRegions);
+		QListWidgetItem* item = new QListWidgetItem(text, ui->screenRegionSwitchesList);
 		item->setData(Qt::UserRole, v);
 
 		lock_guard<mutex> lock(switcher->m);
@@ -66,7 +66,7 @@ void SceneSwitcher::on_screenRegionAdd_clicked()
 	}
 	else
 	{
-		QListWidgetItem* item = ui->screenRegions->item(idx);
+		QListWidgetItem* item = ui->screenRegionSwitchesList->item(idx);
 		item->setText(text);
 
 		string curRegion = region.toUtf8().constData();
@@ -84,13 +84,13 @@ void SceneSwitcher::on_screenRegionAdd_clicked()
 			}
 		}
 
-		ui->screenRegions->sortItems();
+		ui->screenRegionSwitchesList->sortItems();
 	}
 }
 
 void SceneSwitcher::on_screenRegionRemove_clicked()
 {
-	QListWidgetItem* item = ui->screenRegions->currentItem();
+	QListWidgetItem* item = ui->screenRegionSwitchesList->currentItem();
 	if (!item)
 		return;
 
@@ -122,7 +122,7 @@ void SceneSwitcher::on_screenRegions_currentRowChanged(int idx)
 	if (idx == -1)
 		return;
 
-	QListWidgetItem* item = ui->screenRegions->item(idx);
+	QListWidgetItem* item = ui->screenRegionSwitchesList->item(idx);
 
 	QString region = item->data(Qt::UserRole).toString();
 
@@ -146,12 +146,12 @@ void SceneSwitcher::on_screenRegions_currentRowChanged(int idx)
 
 int SceneSwitcher::ScreenRegionFindByData(const QString& region)
 {
-	int count = ui->screenRegions->count();
+	int count = ui->screenRegionSwitchesList->count();
 	int idx = -1;
 
 	for (int i = 0; i < count; i++)
 	{
-		QListWidgetItem* item = ui->screenRegions->item(i);
+		QListWidgetItem* item = ui->screenRegionSwitchesList->item(i);
 		QString itemRegion = item->data(Qt::UserRole).toString();
 
 		if (itemRegion == region)
@@ -162,4 +162,54 @@ int SceneSwitcher::ScreenRegionFindByData(const QString& region)
 	}
 
 	return idx;
+}
+
+void SaveScreenRegionSwitcher(obs_data_array_t*& array) {
+	for (ScreenRegionSwitch& s : switcher->screenRegionSwitches)
+	{
+		obs_data_t* array_obj = obs_data_create();
+
+		obs_source_t* source = obs_weak_source_get_source(s.scene);
+		obs_source_t* transition = obs_weak_source_get_source(s.transition);
+		if (source && transition)
+		{
+			const char* sceneName = obs_source_get_name(source);
+			const char* transitionName = obs_source_get_name(transition);
+			obs_data_set_string(array_obj, "screenRegionScene", sceneName);
+			obs_data_set_string(array_obj, "transition", transitionName);
+			obs_data_set_int(array_obj, "minX", s.minX);
+			obs_data_set_int(array_obj, "minY", s.minY);
+			obs_data_set_int(array_obj, "maxX", s.maxX);
+			obs_data_set_int(array_obj, "maxY", s.maxY);
+			obs_data_set_string(array_obj, "screenRegionStr", s.regionStr.c_str());
+			obs_data_array_push_back(array, array_obj);
+			obs_source_release(source);
+			obs_source_release(transition);
+		}
+
+		obs_data_release(array_obj);
+	}
+}
+
+void LoadScreenRegionSwitcher(obs_data_array_t*& array) {
+	switcher->screenRegionSwitches.clear();
+	size_t count = obs_data_array_count(array);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		obs_data_t* array_obj = obs_data_array_item(array, i);
+
+		const char* scene = obs_data_get_string(array_obj, "screenRegionScene");
+		const char* transition = obs_data_get_string(array_obj, "transition");
+		int minX = obs_data_get_int(array_obj, "minX");
+		int minY = obs_data_get_int(array_obj, "minY");
+		int maxX = obs_data_get_int(array_obj, "maxX");
+		int maxY = obs_data_get_int(array_obj, "maxY");
+		string regionStr = obs_data_get_string(array_obj, "screenRegionStr");
+
+		switcher->screenRegionSwitches.emplace_back(GetWeakSourceByName(scene),
+			GetWeakTransitionByName(transition), minX, minY, maxX, maxY, regionStr);
+
+		obs_data_release(array_obj);
+	}
 }

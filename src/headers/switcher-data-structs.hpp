@@ -24,13 +24,14 @@
 #define WINDOW_TITLE_FUNC 5
 #define PIXEL_COLOR_FUNC 6
 
-#define DEFAULT_PRIORITY_0 READ_FILE_FUNC
-#define DEFAULT_PRIORITY_1 ROUND_TRIP_FUNC
-#define DEFAULT_PRIORITY_2 IDLE_FUNC
-#define DEFAULT_PRIORITY_3 EXE_FUNC
-#define DEFAULT_PRIORITY_4 SCREEN_REGION_FUNC
-#define DEFAULT_PRIORITY_5 WINDOW_TITLE_FUNC
-#define DEFAULT_PRIORITY_6 PIXEL_COLOR_FUNC
+#define DEFAULT_PRIORITY READ_FILE_FUNC, ROUND_TRIP_FUNC, IDLE_FUNC, EXE_FUNC, SCREEN_REGION_FUNC, WINDOW_TITLE_FUNC, PIXEL_COLOR_FUNC
+//#define DEFAULT_PRIORITY_0 READ_FILE_FUNC
+//#define DEFAULT_PRIORITY_1 ROUND_TRIP_FUNC
+//#define DEFAULT_PRIORITY_2 IDLE_FUNC
+//#define DEFAULT_PRIORITY_3 EXE_FUNC
+//#define DEFAULT_PRIORITY_4 SCREEN_REGION_FUNC
+//#define DEFAULT_PRIORITY_5 WINDOW_TITLE_FUNC
+//#define DEFAULT_PRIORITY_6 PIXEL_COLOR_FUNC
 
 using namespace std;
 
@@ -261,7 +262,7 @@ struct SwitcherData
 
 	vector<ScreenRegionSwitch> screenRegionSwitches;
 
-	vector<PixelSwitch> pixels;
+	vector<PixelSwitch> pixelColorSwitches;
 
 	vector<OBSWeakSource> pauseScenesSwitches;
 
@@ -286,13 +287,7 @@ struct SwitcherData
 	vector<DefaultSceneTransition> defaultSceneTransitions;
 
 	vector<int> functionNamesByPriority = vector<int>{
-		DEFAULT_PRIORITY_0,
-		DEFAULT_PRIORITY_1,
-		DEFAULT_PRIORITY_2,
-		DEFAULT_PRIORITY_3,
-		DEFAULT_PRIORITY_4,
-		DEFAULT_PRIORITY_5,
-		DEFAULT_PRIORITY_6,
+		DEFAULT_PRIORITY
 	};
 
 	void Thread();
@@ -344,11 +339,11 @@ struct SwitcherData
 				screenRegionSwitches.erase(screenRegionSwitches.begin() + i--);
 		}
 
-		for (size_t i = 0; i < pixels.size(); i++)
+		for (size_t i = 0; i < pixelColorSwitches.size(); i++)
 		{
-			PixelSwitch& s = pixels[i];
+			PixelSwitch& s = pixelColorSwitches[i];
 			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
-				pixels.erase(pixels.begin() + i--);
+				pixelColorSwitches.erase(pixelColorSwitches.begin() + i--);
 		}
 
 		for (size_t i = 0; i < pauseScenesSwitches.size(); i++)
