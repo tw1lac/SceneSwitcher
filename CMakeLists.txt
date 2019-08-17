@@ -11,10 +11,42 @@ set(CMAKE_AUTOUIC ON)
 
 include(external/FindLibObs.cmake)
 find_package(LibObs REQUIRED)
+
+#find_path(QTDIR QtDir) #Should be restored and the row below deleted (got tired of manually setting the QT-path while making this Cmake-script mor clever...)
+set(QTDIR C:/Users/twilac/Qt2)
+
+## Find QT stuff
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(_qt_osbit "_64")
+else()
+	set(_qt_osbit "")
+endif()
+
+set(_qt_cmake_path "/5.13.0/msvc2017${_qt_osbit}/lib/cmake")
+
+find_path(QT_cmake_DIR
+	NAMES ../../lib/cmake
+	PATHS ${QTDIR}
+	PATH_SUFFIXES
+		${_qt_cmake_path} ../${_qt_cmake_path} ../../${_qt_cmake_path}
+	../../../${_qt_cmake_path}
+	)
+
+set(Qt5Core_DIR "${QT_cmake_DIR}/Qt5Core")
+set(Qt5Widgets_DIR "${QT_cmake_DIR}/Qt5Widgets")
+
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
-find_path(LIBOBS_FRONTEND_INCLUDE_DIR HINTS ${LIBOBS_INCLUDE_DIRS})
-find_file(LIBOBS_FRONTEND_API_LIB NAMES libobs-frontend-api.* HINTS ${LIBOBS_LIB} )
+##
+
+#find_path(LIBOBS_FRONTEND_INCLUDE_DIR 
+#	HINTS ${LIBOBS_INCLUDE_DIRS} 
+#	PATHS 
+#	)
+#find_file(LIBOBS_FRONTEND_API_LIB NAMES libobs-frontend-api.* HINTS ${LIBOBS_LIB} )
+#message("front_lib ${LIBOBS_FRONTEND_API_LIB}\nfront_dir ${LIBOBS_FRONTEND_API_DIR}")
+
 
 if(APPLE)
 	find_library(COCOA Cocoa)
@@ -34,6 +66,18 @@ set(advanced-scene-switcher_HEADERS
 	src/headers/advanced-scene-switcher.hpp
 	src/headers/switcher-data-structs.hpp
 	src/headers/utility.hpp
+	src/switches-structs/executable-struct.hpp
+	src/switches-structs/file-struct.hpp
+	src/switches-structs/general-struct.hpp
+	src/switches-structs/hotkey-struct.hpp
+	src/switches-structs/idle-struct.hpp
+	src/switches-structs/pause-struct.hpp
+	src/switches-structs/pixel-struct.hpp
+	src/switches-structs/random-struct.hpp
+	src/switches-structs/scene-round-trip-struct.hpp
+	src/switches-structs/scene-transitions-struct.hpp
+	src/switches-structs/screen-region-struct.hpp
+	src/switches-structs/window-title-struct.hpp
 	)
 
 set(advanced-scene-switcher_SOURCES
@@ -60,6 +104,7 @@ set(advanced-scene-switcher_UI
 	forms/advanced-scene-switcher.ui
 	)
 
+	
 if(WIN32)
 	set(advanced-scene-switcher_PLATFORM_SOURCES
 		src/win/advanced-scene-switcher-win.cpp)
@@ -88,8 +133,8 @@ add_library(advanced-scene-switcher MODULE
 	)
 
 include_directories(
-	"${LIBOBS_INCLUDE_DIRS}"
-	"${LIBOBS_FRONTEND_INCLUDE_DIR}"
+	${LIBOBS_INCLUDE_DIRS}
+	${LIBOBS_FRONTEND_INCLUDE_DIR}
 	${Qt5Core_INCLUDES}
 	${Qt5Widgets_INCLUDES})
 
@@ -111,7 +156,8 @@ file(GLOB ASS_TRANSLATION_FILES
 if(WIN32)
 	string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 	message("${CMAKE_CXX_FLAGS_RELEASE}")
-
+	
+	
 	find_package(w32-pthreads REQUIRED)
 
 	target_link_libraries(advanced-scene-switcher

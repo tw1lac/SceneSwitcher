@@ -31,8 +31,10 @@ find_path(LIBOBS_INCLUDE_DIR
 		ENV obsPath${_lib_suffix}
 		ENV obsPath
 		${obsPath}
+		${PROJECT_SOURCE_DIR}
 	PATHS
-		/usr/include /usr/local/include /opt/local/include /sw/include
+		../obs-studio /usr/include /usr/local/include
+		/opt/local/include /sw/include 
 	PATH_SUFFIXES
 		libobs
 	)
@@ -52,8 +54,9 @@ function(find_obs_lib base_name repo_build_path lib_name)
 			ENV obsPath
 			${obsPath}
 			${_${base_name_u}_LIBRARY_DIRS}
+			${PROJECT_SOURCE_DIR}
 		PATHS
-			/usr/lib /usr/local/lib /opt/local/lib /sw/lib
+			../obs-studio /usr/lib /usr/local/lib /opt/local/lib /sw/lib
 		PATH_SUFFIXES
 			lib${_lib_suffix} lib
 			libs${_lib_suffix} libs
@@ -75,6 +78,7 @@ function(find_obs_lib base_name repo_build_path lib_name)
 endfunction()
 
 find_obs_lib(LIBOBS libobs obs)
+find_obs_lib(LIBOBS_FRONTEND_API UI/obs-frontend-api obs-frontend-api)
 
 if(MSVC)
 	find_obs_lib(W32_PTHREADS deps/w32-pthreads w32-pthreads)
@@ -93,8 +97,10 @@ if(LIBOBS_FOUND)
 		set(W32_PTHREADS_INCLUDE_DIR ${LIBOBS_INCLUDE_DIR}/../deps/w32-pthreads)
 	endif()
 
-	set(LIBOBS_INCLUDE_DIRS ${LIBOBS_INCLUDE_DIR} ${W32_PTHREADS_INCLUDE_DIR})
-	set(LIBOBS_LIBRARIES ${LIBOBS_LIB} ${W32_PTHREADS_LIB})
+	set(LIBOBS_FRONTEND_API_DIR ${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api)
+
+	set(LIBOBS_INCLUDE_DIRS ${LIBOBS_INCLUDE_DIR} ${LIBOBS_FRONTEND_API_DIR} ${W32_PTHREADS_INCLUDE_DIR})
+	set(LIBOBS_LIBRARIES ${LIBOBS_LIB} ${LIBOBS_FRONTEND_API_LIB} ${W32_PTHREADS_LIB})
 	include(${LIBOBS_INCLUDE_DIR}/../cmake/external/ObsPluginHelpers.cmake)
 
 	# allows external plugins to easily use/share common dependencies that are often included with libobs (such as FFmpeg)
@@ -103,5 +109,5 @@ if(LIBOBS_FOUND)
 		set(INCLUDED_LIBOBS_CMAKE_MODULES true)
 	endif()
 else()
-	message(FATAL_ERROR "Could not find the libobs library" )
+	message(FATAL_ERROR "Could not find the libobs library")
 endif()
