@@ -31,12 +31,14 @@ void SceneSwitcher::on_sceneRoundTripAdd_clicked()
 	{
 		QListWidgetItem* item = new QListWidgetItem(text, ui->sceneRoundTripSwitchesList);
 		item->setData(Qt::UserRole, v);
-
+		//string ugg = "ugg";
 		lock_guard<mutex> lock(switcher->m);
 		switcher->sceneRoundTripSwitches.emplace_back(
-			source1, source2, transition, int(delay * 1000),
-			(scene2Name == QString(PREVIOUS_SCENE_NAME)),
-			text.toUtf8().constData());
+			source1, source2, transition, int(delay * 1000), (scene2Name == QString(PREVIOUS_SCENE_NAME)), text.toUtf8().constData());
+		//switcher->sceneRoundTripSwitches.emplace_back(
+		//	source1, source2, ugg, transition, false, false, 0, 0,0,0,
+		//	text.toUtf8().constData(), "");
+		//(scene2Name == QString(PREVIOUS_SCENE_NAME)) int(delay * 1000)
 	}
 	else
 	{
@@ -47,7 +49,7 @@ void SceneSwitcher::on_sceneRoundTripAdd_clicked()
 			lock_guard<mutex> lock(switcher->m);
 			for (auto& s : switcher->sceneRoundTripSwitches)
 			{
-				if (s.scene1 == source1)
+				if (s.scene == source1)
 				{
 					s.scene2 = source2;
 					s.delay = int(delay * 1000);
@@ -131,16 +133,17 @@ void SceneSwitcher::on_autoStopScenes_currentTextChanged(const QString& text)
 void SceneSwitcher::on_sceneRoundTripSave_clicked()
 {
 	QString directory = QFileDialog::getSaveFileName(
-		this, tr("Save Scene UGG UGG Round Trip to file ..."), QDir::currentPath(), tr("Text files (*.txt)"));
+		this, tr("Save Scene Round Trip to file ..."), QDir::currentPath(), tr("Text files (*.txt)"));
 	if (!directory.isEmpty())
 	{
 		QFile file(directory);
 		if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
 			return;
 		QTextStream out(&file);
+		//for (SceneRoundTripSwitch s : switcher->sceneRoundTripSwitches)
 		for (SceneRoundTripSwitch s : switcher->sceneRoundTripSwitches)
 		{
-			out << QString::fromStdString(GetWeakSourceName(s.scene1)) << "\n";
+			out << QString::fromStdString(GetWeakSourceName(s.scene)) << "\n";
 			if (s.usePreviousScene)
 				out << (PREVIOUS_SCENE_NAME) << "\n";
 			else
@@ -157,7 +160,7 @@ void SceneSwitcher::on_sceneRoundTripLoad_clicked()
 	lock_guard<mutex> lock(switcher->m);
 
 	QString directory = QFileDialog::getOpenFileName(
-		this, tr("Select a file to read UGG Scene Round Trip from ..."), QDir::currentPath(), tr("Text files (*.txt)"));
+		this, tr("Select a file to read Scene Round Trip from ..."), QDir::currentPath(), tr("Text files (*.txt)"));
 	if (!directory.isEmpty())
 	{
 		QFile file(directory);
@@ -216,7 +219,7 @@ void SwitcherData::checkSceneRoundTrip(bool& match, OBSWeakSource& scene, OBSWea
 
 	for (SceneRoundTripSwitch& s : sceneRoundTripSwitches)
 	{
-		if (s.scene1 == ws)
+		if (s.scene == ws)
 		{
 			sceneRoundTripActive = true;
 			int dur = s.delay - interval;
@@ -258,7 +261,7 @@ void SceneSwitcher::on_sceneRoundTrips_currentRowChanged(int idx)
 	{
 		if (sceneRoundTrip.compare(s.sceneRoundTripStr.c_str()) == 0)
 		{
-			string scene1 = GetWeakSourceName(s.scene1);
+			string scene1 = GetWeakSourceName(s.scene);
 			string scene2 = GetWeakSourceName(s.scene2);
 			string transitionName = GetWeakSourceName(s.transition);
 			int delay = s.delay;
@@ -310,10 +313,11 @@ void SwitcherData::autoStopStreamAndRecording()
 
 void SaveScreenRoundTripSwitcher(obs_data_array_t*& array) {
 	for (SceneRoundTripSwitch& s : switcher->sceneRoundTripSwitches)
+	//for (StructSwitch& s : switcher->sceneRoundTripSwitches)
 	{
 		obs_data_t* array_obj = obs_data_create();
 
-		obs_source_t* source1 = obs_weak_source_get_source(s.scene1);
+		obs_source_t* source1 = obs_weak_source_get_source(s.scene);
 		obs_source_t* source2 = obs_weak_source_get_source(s.scene2);
 		obs_source_t* transition = obs_weak_source_get_source(s.transition);
 		if (source1 && (s.usePreviousScene || source2) && transition)

@@ -39,7 +39,7 @@ void SceneSwitcher::on_transitionsAdd_clicked()
 			lock_guard<mutex> lock(switcher->m);
 			for (auto& s : switcher->sceneTransitions)
 			{
-				if (s.scene1 == source1 && s.scene2 == source2)
+				if (s.scene == source1 && s.scene2 == source2)
 				{
 					s.transition = transition;
 					s.sceneTransitionStr = text.toUtf8().constData();
@@ -232,7 +232,7 @@ void SceneSwitcher::on_sceneTransitions_currentRowChanged(int idx)
 	{
 		if (sceneTransition.compare(s.sceneTransitionStr.c_str()) == 0)
 		{
-			string scene1 = GetWeakSourceName(s.scene1);
+			string scene1 = GetWeakSourceName(s.scene);
 			string scene2 = GetWeakSourceName(s.scene2);
 			string transitionName = GetWeakSourceName(s.transition);
 			ui->transitionsFromScenes->setCurrentText(scene1.c_str());
@@ -275,7 +275,7 @@ obs_weak_source_t* getNextTransition(obs_weak_source_t* scene1, obs_weak_source_
 	{
 		for (SceneTransition& t : switcher->sceneTransitions)
 		{
-			if (t.scene1 == scene1 && t.scene2 == scene2)
+			if (t.scene == scene1 && t.scene2 == scene2)
 				ws = t.transition;
 		}
 		obs_weak_source_addref(ws);
@@ -288,7 +288,7 @@ void SaveScreenTransitions(obs_data_array_t*& array) {
 	{
 		obs_data_t* array_obj = obs_data_create();
 
-		obs_source_t* source1 = obs_weak_source_get_source(s.scene1);
+		obs_source_t* source1 = obs_weak_source_get_source(s.scene);
 		obs_source_t* source2 = obs_weak_source_get_source(s.scene2);
 		obs_source_t* transition = obs_weak_source_get_source(s.transition);
 		if (source1 && source2 && transition)

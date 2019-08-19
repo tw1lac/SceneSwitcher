@@ -66,6 +66,7 @@ set(advanced-scene-switcher_HEADERS
 	src/headers/advanced-scene-switcher.hpp
 	src/headers/switcher-data-structs.hpp
 	src/headers/utility.hpp
+	src/headers/switch-common.hpp
 	src/switches-structs/executable-struct.hpp
 	src/switches-structs/file-struct.hpp
 	src/switches-structs/general-struct.hpp
@@ -97,6 +98,9 @@ set(advanced-scene-switcher_SOURCES
 	src/general.cpp
 	src/pause-switch.cpp
 	src/random.cpp
+	src/save-and-load.cpp
+	src/ui-creator.cpp
+	src/switch-common.cpp
 	)
 
 set(advanced-scene-switcher_UI

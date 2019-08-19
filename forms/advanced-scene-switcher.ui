@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="generalTab">
       <attribute name="title">
@@ -359,7 +359,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="ignoreWindowsTab">
+     <widget class="QWidget" name="windowTitleTab">
       <attribute name="title">
        <string>Window Title</string>
       </attribute>
@@ -1340,7 +1340,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_23">
          <item>
-          <widget class="QComboBox" name="executable"/>
+          <widget class="QComboBox" name="executableExecutables"/>
          </item>
          <item>
           <widget class="QComboBox" name="executableScenes">

@@ -16,6 +16,21 @@
 
 #define PREVIOUS_SCENE_NAME "Previous Scene"
 
+//#define READ_FILE_NAME "File Content"
+//#define ROUND_TRIP_NAME "Scene Sequence"
+//#define IDLE_NAME "Idle Detection"
+//#define EXE_NAME "Executable"
+//#define SCREEN_REGION_NAME "Screen Region"
+//#define WINDOW_TITLE_NAME "Window Title"
+//#define PIXEL_COLOR_NAME "Pixel Color"
+
+//#define PRIORITY_LIST_NAMES [READ_FILE_NAME, ROUND_TRIP_NAME, IDLE_NAME, EXE_NAME, SCREEN_REGION_NAME, WINDOW_TITLE_NAME, PIXEL_COLOR_NAME]
+
+
+#define PRIORITY_LIST_NAMES {"File Content", "Scene Sequence", "Idle Detection", "Executable", "Screen Region", "Window Title", "Pixel Color"}
+
+//#define DEFAULT_PRIORI 0, 1, 2, 3, 4, 5, 6
+
 #define READ_FILE_FUNC 0
 #define ROUND_TRIP_FUNC 1
 #define IDLE_FUNC 2
@@ -39,6 +54,55 @@ using namespace std;
 /********************************************************************************
  * Data structs for each scene switching method
  ********************************************************************************/
+struct StructSwitch
+{
+	OBSWeakSource scene;
+	OBSWeakSource scene2;
+	string window;
+	OBSWeakSource transition;
+	bool fullscreen;
+	bool checkBackground;
+
+	QString mExe;
+	bool mInFocus;
+
+	int minX, minY, maxX, maxY;
+
+	int pxX, pxY;
+	string colorsStr;
+
+	int delay;
+	bool usePreviousScene;
+	string uiDisplayStr;
+
+	string file;
+	string text;
+	bool useRegex = false;
+	bool useTime = false;
+	QDateTime lastMod;
+
+
+	inline StructSwitch(
+		OBSWeakSource scene_, OBSWeakSource scene2_, string window_, OBSWeakSource transition_, bool fullscreen_, bool checkBackground_, int minX_, int minY_,
+		int maxX_, int maxY_, string uiDisplayStr_, string text_)
+		: scene(scene_)
+		, scene2(scene2_)
+		, window(window_)
+		, transition(transition_)
+		, fullscreen(fullscreen_)
+		, checkBackground(checkBackground_)
+		, minX(minX_)
+		, minY(minY_)
+		, maxX(maxX_)
+		, maxY(maxY_)
+		, uiDisplayStr(uiDisplayStr_)
+		, text(text_)
+	{
+	}
+};
+
+
+
 struct WindowSceneSwitch
 {
 	OBSWeakSource scene;
@@ -117,16 +181,16 @@ struct PixelSwitch
 
 struct SceneRoundTripSwitch
 {
-	OBSWeakSource scene1;
+	OBSWeakSource scene;
 	OBSWeakSource scene2;
 	OBSWeakSource transition;
 	int delay;
 	bool usePreviousScene;
 	string sceneRoundTripStr;
 
-	inline SceneRoundTripSwitch(OBSWeakSource scene1_, OBSWeakSource scene2_,
+	inline SceneRoundTripSwitch(OBSWeakSource scene_, OBSWeakSource scene2_,
 		OBSWeakSource transition_, int delay_, bool usePreviousScene_, string str)
-		: scene1(scene1_)
+		: scene(scene_)
 		, scene2(scene2_)
 		, transition(transition_)
 		, delay(delay_)
@@ -140,11 +204,11 @@ struct RandomSwitch
 {
 	OBSWeakSource scene;
 	OBSWeakSource transition;
-	double delay;
+	int delay;
 	string randomSwitchStr;
 
 	inline RandomSwitch(OBSWeakSource scene_, OBSWeakSource transition_
-		, double delay_, string str)
+		, int delay_, string str)
 		: scene(scene_)
 		, transition(transition_)
 		, delay(delay_)
@@ -155,14 +219,14 @@ struct RandomSwitch
 
 struct SceneTransition
 {
-	OBSWeakSource scene1;
+	OBSWeakSource scene;
 	OBSWeakSource scene2;
 	OBSWeakSource transition;
 	string sceneTransitionStr;
 
-	inline SceneTransition(OBSWeakSource scene1_, OBSWeakSource scene2_, OBSWeakSource transition_,
+	inline SceneTransition(OBSWeakSource scene_, OBSWeakSource scene2_, OBSWeakSource transition_,
 		string sceneTransitionStr_)
-		: scene1(scene1_)
+		: scene(scene_)
 		, scene2(scene2_)
 		, transition(transition_)
 		, sceneTransitionStr(sceneTransitionStr_)
@@ -256,13 +320,15 @@ struct SwitcherData
 	OBSWeakSource nonMatchingScene;
 	NoMatch switchIfNotMatching = NO_SWITCH;
 
-	vector<WindowSceneSwitch> windowSwitches;
+	vector<StructSwitch> windowSwitches;
+
 	vector<string> ignoreIdleWindows;
+
 	string lastTitle;
 
-	vector<ScreenRegionSwitch> screenRegionSwitches;
+	vector<StructSwitch> screenRegionSwitches;
 
-	vector<PixelSwitch> pixelColorSwitches;
+	vector<StructSwitch> pixelColorSwitches;
 
 	vector<OBSWeakSource> pauseScenesSwitches;
 
@@ -270,9 +336,22 @@ struct SwitcherData
 
 	vector<string> ignoreWindowsSwitches;
 
+	//vector<StructSwitch> sceneRoundTripSwitches;
+
+	vector<StructSwitch> randomSwitches;
+
+	//vector<WindowSceneSwitch> windowSwitches;
+	//vector<string> ignoreIdleWindows;
+	//string lastTitle;
+	//vector<ScreenRegionSwitch> screenRegionSwitches;
+	//vector<PixelSwitch> pixelColorSwitches;
+	//vector<OBSWeakSource> pauseScenesSwitches;
+	//vector<string> pauseWindowsSwitches;
+	//vector<string> ignoreWindowsSwitches;
+
 	vector<SceneRoundTripSwitch> sceneRoundTripSwitches;
 
-	vector<RandomSwitch> randomSwitches;
+	//vector<RandomSwitch> randomSwitches;
 
 	FileIOData fileIO;
 	IdleData idleData;
@@ -294,6 +373,7 @@ struct SwitcherData
 	void Start();
 	void Stop();
 
+
 	bool sceneChangedDuringWait();
 	bool prioFuncsValid();
 	void writeSceneInfoToFile();
@@ -310,6 +390,114 @@ struct SwitcherData
 	void checkFileContent(bool& match, OBSWeakSource& scene, OBSWeakSource& transition);
 	void checkRandom(bool& match, OBSWeakSource& scene, OBSWeakSource& transition, int& delay);
 
+	void Pruner(vector<StructSwitch> stuffSwitches)
+	{
+		for (size_t i = 0; i < stuffSwitches.size(); i++)
+		{
+			StructSwitch& s = stuffSwitches[i];
+			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+				stuffSwitches.erase(stuffSwitches.begin() + i--);
+		}
+	}
+
+	void Prune()
+	{
+		Pruner(windowSwitches);
+		//for (size_t i = 0; i < windowSwitches.size(); i++)
+		//{
+		//	WindowSceneSwitch& s = windowSwitches[i];
+		//	if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+		//		windowSwitches.erase(windowSwitches.begin() + i--);
+		//}
+
+		if (nonMatchingScene && !WeakSourceValid(nonMatchingScene))
+		{
+			switchIfNotMatching = NO_SWITCH;
+			nonMatchingScene = nullptr;
+		}
+		Pruner(randomSwitches);
+		//for (size_t i = 0; i < randomSwitches.size(); i++)
+		//{
+		//	RandomSwitch& s = randomSwitches[i];
+		//	if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+		//		randomSwitches.erase(randomSwitches.begin() + i--);
+		//}
+
+		Pruner(screenRegionSwitches);
+		//for (size_t i = 0; i < screenRegionSwitches.size(); i++)
+		//{
+		//	ScreenRegionSwitch& s = screenRegionSwitches[i];
+		//	if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+		//		screenRegionSwitches.erase(screenRegionSwitches.begin() + i--);
+		//}
+
+		Pruner(pixelColorSwitches);
+		//for (size_t i = 0; i < pixelColorSwitches.size(); i++)
+		//{
+		//	PixelSwitch& s = pixelColorSwitches[i];
+		//	if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+		//		pixelColorSwitches.erase(pixelColorSwitches.begin() + i--);
+		//}
+
+		for (size_t i = 0; i < pauseScenesSwitches.size(); i++)
+		{
+			OBSWeakSource& scene = pauseScenesSwitches[i];
+			if (!WeakSourceValid(scene))
+				pauseScenesSwitches.erase(pauseScenesSwitches.begin() + i--);
+		}
+
+		//Pruner(sceneRoundTripSwitches);
+		for (size_t i = 0; i < sceneRoundTripSwitches.size(); i++)
+		{
+			SceneRoundTripSwitch& s = sceneRoundTripSwitches[i];
+			if (!WeakSourceValid(s.scene) || (!s.usePreviousScene && !WeakSourceValid(s.scene2))
+				|| !WeakSourceValid(s.transition))
+				sceneRoundTripSwitches.erase(sceneRoundTripSwitches.begin() + i--);
+		}
+
+		if (!WeakSourceValid(autoStopScene))
+		{
+			autoStopScene = nullptr;
+			autoStopEnable = false;
+		}
+
+		for (size_t i = 0; i < sceneTransitions.size(); i++)
+		{
+			SceneTransition& s = sceneTransitions[i];
+			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.scene2)
+				|| !WeakSourceValid(s.transition))
+				sceneTransitions.erase(sceneTransitions.begin() + i--);
+		}
+
+		for (size_t i = 0; i < defaultSceneTransitions.size(); i++)
+		{
+			DefaultSceneTransition& s = defaultSceneTransitions[i];
+			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+				defaultSceneTransitions.erase(defaultSceneTransitions.begin() + i--);
+		}
+
+		for (size_t i = 0; i < executableSwitches.size(); i++)
+		{
+			ExecutableSceneSwitch& s = executableSwitches[i];
+			if (!WeakSourceValid(s.mScene) || !WeakSourceValid(s.mTransition))
+				executableSwitches.erase(executableSwitches.begin() + i--);
+		}
+
+		for (size_t i = 0; i < fileSwitches.size(); i++)
+		{
+			FileSwitch& s = fileSwitches[i];
+			if (!WeakSourceValid(s.scene) || !WeakSourceValid(s.transition))
+				fileSwitches.erase(fileSwitches.begin() + i--);
+		}
+
+		if (!idleData.usePreviousScene && !WeakSourceValid(idleData.scene) || !WeakSourceValid(idleData.transition))
+		{
+			idleData.idleEnable = false;
+		}
+	}
+
+
+/*
 	void Prune()
 	{
 		for (size_t i = 0; i < windowSwitches.size(); i++)
@@ -401,6 +589,8 @@ struct SwitcherData
 			idleData.idleEnable = false;
 		}
 	}
+	*/
+	
 	inline ~SwitcherData()
 	{
 		Stop();

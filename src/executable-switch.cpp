@@ -35,7 +35,7 @@ void SceneSwitcher::on_executables_currentRowChanged(int idx)
 			QString sceneName = GetWeakSourceName(s.mScene).c_str();
 			QString transitionName = GetWeakSourceName(s.mTransition).c_str();
 			ui->executableScenes->setCurrentText(sceneName);
-			ui->executable->setCurrentText(exec);
+			ui->executableExecutables->setCurrentText(exec);
 			ui->executableTransitions->setCurrentText(transitionName);
 			ui->requiresFocusCheckBox->setChecked(s.mInFocus);
 			break;
@@ -46,7 +46,7 @@ void SceneSwitcher::on_executables_currentRowChanged(int idx)
 void SceneSwitcher::on_executableAdd_clicked()
 {
 	QString sceneName = ui->executableScenes->currentText();
-	QString exeName = ui->executable->currentText();
+	QString exeName = ui->executableExecutables->currentText();
 	QString transitionName = ui->executableTransitions->currentText();
 	bool inFocus = ui->requiresFocusCheckBox->isChecked();
 

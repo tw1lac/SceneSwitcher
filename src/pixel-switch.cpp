@@ -54,10 +54,9 @@ void SceneSwitcher::on_pixelSwitchesAdd_clicked()
 	{
 		QListWidgetItem* item = new QListWidgetItem(text, ui->pixelColorSwitchesList);
 		item->setData(Qt::UserRole, v);
-
 		lock_guard<mutex> lock(switcher->m);
 		switcher->pixelColorSwitches.emplace_back(
-			source, transition, pxX, pxY, colors.toUtf8().constData(), pixelStr);
+			source, source, "", transition, false,false, pxX, pxY, 0, 0, colors.toUtf8().constData(), pixelStr);
 	}
 	else
 	{
@@ -99,7 +98,7 @@ void SceneSwitcher::on_pixelSwitchesRemove_clicked()
 		{
 			auto& s = *it;
 
-			if (s.pixelStr == pixel)
+			if (s.uiDisplayStr == pixel)
 			{
 				switches.erase(it);
 				break;
@@ -125,7 +124,7 @@ void SceneSwitcher::on_pixelSwitches_currentRowChanged(int idx)
 	lock_guard<mutex> lock(switcher->m);
 	for (auto& s : switcher->pixelColorSwitches)
 	{
-		if (pixel.compare(s.pixelStr.c_str()) == 0)
+		if (pixel.compare(s.uiDisplayStr.c_str()) == 0)
 		{
 			string name = GetWeakSourceName(s.scene);
 			string transitionName = GetWeakSourceName(s.transition);
@@ -162,7 +161,8 @@ int SceneSwitcher::PixelFindByData(const QString& pixel)
 }
 
 void SavePixelSwitcher(obs_data_array_t*& array) {
-	for (PixelSwitch& s : switcher->pixelColorSwitches)
+	//for (PixelSwitch& s : switcher->pixelColorSwitches)
+	for (StructSwitch& s : switcher->pixelColorSwitches)
 	{
 		obs_data_t* array_obj = obs_data_create();
 
@@ -177,7 +177,7 @@ void SavePixelSwitcher(obs_data_array_t*& array) {
 			obs_data_set_int(array_obj, "pxX", s.pxX);
 			obs_data_set_int(array_obj, "pxY", s.pxY);
 			obs_data_set_string(array_obj, "colorsStr", s.colorsStr.c_str());
-			obs_data_set_string(array_obj, "pixelStr", s.pixelStr.c_str());
+			obs_data_set_string(array_obj, "pixelStr", s.uiDisplayStr.c_str());
 			obs_data_array_push_back(array, array_obj);
 			obs_source_release(source);
 			obs_source_release(transition);
@@ -202,8 +202,8 @@ void LoadPixelSwitcher(obs_data_array_t*& array) {
 		string colorsStr = obs_data_get_string(array_obj, "colorsStr");
 		string pixelStr = obs_data_get_string(array_obj, "pixelStr");
 
-		switcher->pixelColorSwitches.emplace_back(GetWeakSourceByName(scene),
-			GetWeakTransitionByName(transition), pxX, pxY, colorsStr, pixelStr);
+		switcher->pixelColorSwitches.emplace_back(GetWeakSourceByName(scene), GetWeakSourceByName(scene),
+			"", GetWeakTransitionByName(transition), false, false, pxX, pxY, 0, 0, colorsStr, pixelStr);
 
 		obs_data_release(array_obj);
 	}

@@ -72,8 +72,9 @@ void GetWindowList(vector<string>& windows)
 	while (window)
 	{
 		string title;
-		if (WindowValid(window) && GetWindowTitle(window, title))
+		if (WindowValid(window) && GetWindowTitle(window, title)) {
 			windows.emplace_back(title);
+		}
 		window = GetNextWindow(window, GW_HWNDNEXT);
 	}
 }

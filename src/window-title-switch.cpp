@@ -25,7 +25,7 @@ void SceneSwitcher::on_add_clicked()
 	{
 		lock_guard<mutex> lock(switcher->m);
 		switcher->windowSwitches.emplace_back(
-			source, windowName.toUtf8().constData(), transition, fullscreen, checkBackground);
+			source, source, windowName.toUtf8().constData(), transition, fullscreen, checkBackground, 0,0,0,0,"","");
 
 		QListWidgetItem* item = new QListWidgetItem(text, ui->windowTitleSwitchesList);
 		item->setData(Qt::UserRole, v);
@@ -249,7 +249,8 @@ void SwitcherData::checkWindowTitleSwitch(bool& match, OBSWeakSource& scene, OBS
 	lastTitle = title;
 
 	//direct match
-	for (WindowSceneSwitch& s : windowSwitches)
+	//for (WindowSceneSwitch& s : windowSwitches)
+	for (StructSwitch& s : windowSwitches)
 	{
 		if (s.window == title)
 		{
@@ -266,7 +267,8 @@ void SwitcherData::checkWindowTitleSwitch(bool& match, OBSWeakSource& scene, OBS
 		}
 	}
 	//regex match
-	for (WindowSceneSwitch& s : windowSwitches)
+	//for (WindowSceneSwitch& s : windowSwitches)
+	for (StructSwitch& s : windowSwitches)
 	{
 		try
 		{
@@ -286,7 +288,8 @@ void SwitcherData::checkWindowTitleSwitch(bool& match, OBSWeakSource& scene, OBS
 }
 
 void SaveWindowSwitcher(obs_data_array_t*& array) {
-	for (WindowSceneSwitch& s : switcher->windowSwitches)
+	//for (WindowSceneSwitch& s : switcher->windowSwitches)
+	for (StructSwitch& s : switcher->windowSwitches)
 	{
 		obs_data_t* array_obj = obs_data_create();
 
@@ -324,8 +327,8 @@ void LoadWindowSwitcher(obs_data_array_t*& array) {
 		bool fullscreen = obs_data_get_bool(array_obj, "fullscreen");
 		bool checkBackground = obs_data_get_bool(array_obj, "checkBackground");
 
-		switcher->windowSwitches.emplace_back(GetWeakSourceByName(scene), window,
-			GetWeakTransitionByName(transition), fullscreen, checkBackground);
+		switcher->windowSwitches.emplace_back(GetWeakSourceByName(scene), GetWeakSourceByName(scene), window,
+			GetWeakTransitionByName(transition), fullscreen, checkBackground, 0,0,0,0,"","");
 
 		obs_data_release(array_obj);
 	}

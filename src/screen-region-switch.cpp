@@ -59,10 +59,9 @@ void SceneSwitcher::on_screenRegionAdd_clicked()
 	{
 		QListWidgetItem* item = new QListWidgetItem(text, ui->screenRegionSwitchesList);
 		item->setData(Qt::UserRole, v);
-
 		lock_guard<mutex> lock(switcher->m);
 		switcher->screenRegionSwitches.emplace_back(
-			source, transition, minX, minY, maxX, maxY, regionStr);
+			source, source, "", transition, false, false, minX, minY, maxX, maxY, regionStr, "");
 	}
 	else
 	{
@@ -75,7 +74,7 @@ void SceneSwitcher::on_screenRegionAdd_clicked()
 			lock_guard<mutex> lock(switcher->m);
 			for (auto& s : switcher->screenRegionSwitches)
 			{
-				if (s.regionStr == curRegion)
+				if (s.uiDisplayStr == curRegion)
 				{
 					s.scene = source;
 					s.transition = transition;
@@ -104,7 +103,7 @@ void SceneSwitcher::on_screenRegionRemove_clicked()
 		{
 			auto& s = *it;
 
-			if (s.regionStr == region)
+			if (s.uiDisplayStr == region)
 			{
 				switches.erase(it);
 				break;
@@ -129,7 +128,7 @@ void SceneSwitcher::on_screenRegions_currentRowChanged(int idx)
 	lock_guard<mutex> lock(switcher->m);
 	for (auto& s : switcher->screenRegionSwitches)
 	{
-		if (region.compare(s.regionStr.c_str()) == 0)
+		if (region.compare(s.uiDisplayStr.c_str()) == 0)
 		{
 			string name = GetWeakSourceName(s.scene);
 			string transitionName = GetWeakSourceName(s.transition);
@@ -165,7 +164,8 @@ int SceneSwitcher::ScreenRegionFindByData(const QString& region)
 }
 
 void SaveScreenRegionSwitcher(obs_data_array_t*& array) {
-	for (ScreenRegionSwitch& s : switcher->screenRegionSwitches)
+	//for (ScreenRegionSwitch& s : switcher->screenRegionSwitches)
+	for (StructSwitch& s : switcher->screenRegionSwitches)
 	{
 		obs_data_t* array_obj = obs_data_create();
 
@@ -181,7 +181,7 @@ void SaveScreenRegionSwitcher(obs_data_array_t*& array) {
 			obs_data_set_int(array_obj, "minY", s.minY);
 			obs_data_set_int(array_obj, "maxX", s.maxX);
 			obs_data_set_int(array_obj, "maxY", s.maxY);
-			obs_data_set_string(array_obj, "screenRegionStr", s.regionStr.c_str());
+			obs_data_set_string(array_obj, "screenRegionStr", s.uiDisplayStr.c_str());
 			obs_data_array_push_back(array, array_obj);
 			obs_source_release(source);
 			obs_source_release(transition);
@@ -207,8 +207,8 @@ void LoadScreenRegionSwitcher(obs_data_array_t*& array) {
 		int maxY = obs_data_get_int(array_obj, "maxY");
 		string regionStr = obs_data_get_string(array_obj, "screenRegionStr");
 
-		switcher->screenRegionSwitches.emplace_back(GetWeakSourceByName(scene),
-			GetWeakTransitionByName(transition), minX, minY, maxX, maxY, regionStr);
+		switcher->screenRegionSwitches.emplace_back(GetWeakSourceByName(scene), GetWeakSourceByName(scene), "",
+			GetWeakTransitionByName(transition), false, false, minX, minY, maxX, maxY, regionStr, "");
 
 		obs_data_release(array_obj);
 	}

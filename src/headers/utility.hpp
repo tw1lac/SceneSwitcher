@@ -13,6 +13,16 @@ static inline bool WeakSourceValid(obs_weak_source_t* ws)
 	return !!source;
 }
 
+static inline QString MakeUIDisplayName(
+	const QString& scene, const QString& value, const QString& transition, bool fullscreen, bool checkBackground)
+{
+	if (!fullscreen)
+		return QStringLiteral("[") + scene + QStringLiteral(", ") + transition
+		+ QStringLiteral("]: ") + value;
+	return QStringLiteral("[") + scene + QStringLiteral(", ") + transition + QStringLiteral("]: ")
+		+ value + QStringLiteral(" (only if window is fullscreen)");
+}
+
 static inline QString MakeSwitchName(
 	const QString& scene, const QString& value, const QString& transition, bool fullscreen, bool checkBackground)
 {
@@ -71,7 +81,7 @@ static inline QString MakeDefaultSceneTransitionName(
 }
 
 static inline QString MakeRandomSwitchName(
-	const QString& scene, const QString& transition, double& delay)
+	const QString& scene, const QString& transition, double delay)
 {
 	return QStringLiteral("[") + scene + QStringLiteral(", ") + transition + QStringLiteral("]: ")
 		+ QString::number(delay) + QStringLiteral(" seconds");

@@ -20,7 +20,7 @@ public:
 	std::unique_ptr<Ui_SceneSwitcher> ui;
 	bool loading = true;
 
-	SceneSwitcher(QWidget *parent);
+	SceneSwitcher(QWidget* parent);
 
 	void closeEvent(QCloseEvent *event) override;
 
@@ -126,6 +126,11 @@ public slots:
 	void updateScreenRegionCursorPos();
 
 	void on_close_clicked();
+
+
+	void addStuff(string switchName);
+	int SceneSwitcher::FindByDataUgg(string switchname, const QString& dataString);
+	void SceneSwitcher::removeSwitch(string switchName, vector<StructSwitch>& switchVecktor);
 };
 
 

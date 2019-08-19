@@ -14,7 +14,7 @@ void SceneSwitcher::on_randomScenesList_currentRowChanged(int idx)
 	lock_guard<mutex> lock(switcher->m);
 	for (auto& s : switcher->randomSwitches)
 	{
-		if (randomSceneStr.compare(s.randomSwitchStr.c_str()) == 0)
+		if (randomSceneStr.compare(s.uiDisplayStr.c_str()) == 0)
 		{
 			QString sceneName = GetWeakSourceName(s.scene).c_str();
 			QString transitionName = GetWeakSourceName(s.transition).c_str();
@@ -65,7 +65,7 @@ void SceneSwitcher::on_randomAdd_clicked()
 	{
 		lock_guard<mutex> lock(switcher->m);
 		switcher->randomSwitches.emplace_back(
-			source, transition, delay, text.toUtf8().constData());
+			source, source, "", transition, false, false, delay, 0, 0, 0, text.toUtf8().constData(), "");
 
 		QListWidgetItem* item = new QListWidgetItem(text, ui->randomScenesList);
 		item->setData(Qt::UserRole, v);
@@ -83,7 +83,7 @@ void SceneSwitcher::on_randomAdd_clicked()
 				{
 					s.delay = delay;
 					s.transition = transition;
-					s.randomSwitchStr = text.toUtf8().constData();;
+					s.uiDisplayStr = text.toUtf8().constData();;
 					break;
 				}
 			}
@@ -109,7 +109,7 @@ void SceneSwitcher::on_randomRemove_clicked()
 		{
 			auto& s = *it;
 
-			if (s.randomSwitchStr == text)
+			if (s.uiDisplayStr == text)
 			{
 				switches.erase(it);
 				break;
@@ -125,9 +125,9 @@ void SwitcherData::checkRandom(bool& match, OBSWeakSource& scene, OBSWeakSource&
 	if (randomSwitches.size() == 0)
 		return;
 
-	vector<RandomSwitch> rs (randomSwitches);
+	vector<StructSwitch> rs (randomSwitches);
 	std::random_shuffle(rs.begin(), rs.end());
-	for (RandomSwitch& r : rs)
+	for (StructSwitch& r : rs)
 	{
 		if (r.scene == lastRandomScene)
 			continue;
@@ -141,7 +141,8 @@ void SwitcherData::checkRandom(bool& match, OBSWeakSource& scene, OBSWeakSource&
 }
 
 void SaveRandomSwitcher(obs_data_array_t*& array) {
-	for (RandomSwitch& s : switcher->randomSwitches)
+	//for (RandomSwitch& s : switcher->randomSwitches)
+	for (StructSwitch& s : switcher->randomSwitches)
 	{
 		obs_data_t* array_obj = obs_data_create();
 
@@ -155,7 +156,7 @@ void SaveRandomSwitcher(obs_data_array_t*& array) {
 			obs_data_set_string(array_obj, "scene", sceneName);
 			obs_data_set_string(array_obj, "transition", transitionName);
 			obs_data_set_double(array_obj, "delay", s.delay);
-			obs_data_set_string(array_obj, "str", s.randomSwitchStr.c_str());
+			obs_data_set_string(array_obj, "str", s.uiDisplayStr.c_str());
 			obs_data_array_push_back(array, array_obj);
 			obs_source_release(source);
 			obs_source_release(transition);
@@ -177,9 +178,9 @@ void LoadRandomSwitcher(obs_data_array_t*& array) {
 		const char* transition = obs_data_get_string(array_obj, "transition");
 		double delay = obs_data_get_double(array_obj, "delay");
 		const char* str = obs_data_get_string(array_obj, "str");
-
+		
 		switcher->randomSwitches.emplace_back(
-			GetWeakSourceByName(scene), GetWeakTransitionByName(transition), delay, str);
+			GetWeakSourceByName(scene), GetWeakSourceByName(scene), "", GetWeakTransitionByName(transition), false, false, delay, 0,0,0, str, "");
 
 		obs_data_release(array_obj);
 	}
